@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class SwkomWs2024GroupEApplication {
+public class PaperlessREST {
 
     public static void main(String[] args) {
-        SpringApplication.run(SwkomWs2024GroupEApplication.class, args);
+        SpringApplication.run(PaperlessREST.class, args);
     }
 
 }
