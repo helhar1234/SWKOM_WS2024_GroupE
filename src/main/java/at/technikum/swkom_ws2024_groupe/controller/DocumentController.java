@@ -4,6 +4,8 @@ import at.technikum.swkom_ws2024_groupe.customExceptions.DocumentNotFoundExcepti
 import at.technikum.swkom_ws2024_groupe.customExceptions.InvalidFileUploadException;
 import at.technikum.swkom_ws2024_groupe.entities.Document;
 import at.technikum.swkom_ws2024_groupe.service.DocumentService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,11 +36,11 @@ public class DocumentController {
             @ApiResponse(responseCode = "400", description = "Bad request"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @PostMapping(consumes = "multipart/form-data")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadDocument(@RequestParam("file") MultipartFile file) {
         try {
             if (file.isEmpty()) {
-                return ResponseEntity.status(400).body("File is empty");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("File is empty");
             }
 
             Document document = documentService.uploadDocument(file.getOriginalFilename(), file.getContentType(), file.getSize());
