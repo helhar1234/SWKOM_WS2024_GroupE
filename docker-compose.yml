@@ -8,3 +8,4 @@ services:
       - .:/app
     environment:
       - JAVA_OPTS=-Xmx512m
+    platform: linux/amd64

@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+//todo: change status numbers to fixed status vatiables (HttpStatus.)
+//todo: no content in body for response?
+
 @RestController
 @RequestMapping("/api/documents")
 public class DocumentController {
