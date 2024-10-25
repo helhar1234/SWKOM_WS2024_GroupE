@@ -13,6 +13,8 @@ COPY pom.xml .
 # Download all the dependencies (this step helps to leverage Docker's cache)
 RUN mvn dependency:go-offline
 
+#todo: better copy jar file after building outside... ?
+
 # Copy the entire source code
 COPY src ./src
 
