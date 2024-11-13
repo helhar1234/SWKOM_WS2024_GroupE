@@ -1,4 +1,3 @@
-
 # Projekt: PaperlessREST
 
 ## Swagger
