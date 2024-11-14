@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-//todo: change status numbers to fixed status vatiables (HttpStatus.)
+//todo: change status numbers to fixed status variables (HttpStatus.)
 //todo: no content in body for response?
 
 @RestController
@@ -39,6 +39,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "400", description = "Bad request"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
+    @CrossOrigin
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadDocument(@RequestParam("file") MultipartFile file) {
         try {
@@ -61,6 +62,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "200", description = "Document found", content = @Content(schema = @Schema(implementation = Document.class))),
             @ApiResponse(responseCode = "404", description = "Document not found")
     })
+    @CrossOrigin
     @GetMapping("/{id}")
     public ResponseEntity<?> getDocument(@PathVariable UUID id) {
         try {
@@ -78,6 +80,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "200", description = "Documents found", content = @Content(schema = @Schema(implementation = Document.class))),
             @ApiResponse(responseCode = "404", description = "No documents found")
     })
+    @CrossOrigin
     @GetMapping()
     public ResponseEntity<?> getAllDocuments() {
         try {
