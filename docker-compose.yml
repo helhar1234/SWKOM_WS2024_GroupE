@@ -9,6 +9,7 @@ services:
       - "8081:8081"
     networks:
       - paperless-network
+    platform: linux/amd64
 
   paperlessui:
     build:
@@ -20,6 +21,7 @@ services:
       - paperless-network
     depends_on:
       - paperlessrest
+    platform: linux/amd64
 
 networks:
   paperless-network:
