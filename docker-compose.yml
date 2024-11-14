@@ -1,29 +1,26 @@
-version: '3'
+version: '3.8'
 
 services:
-  PaperlessREST:
+  paperlessrest:
     build:
-      context: ./PaperlessREST   # Verzeichnis für das Backend
-      dockerfile: Dockerfile     # Dockerfile im PaperlessREST-Verzeichnis
+      context: ./PaperlessREST
+      dockerfile: Dockerfile
     ports:
       - "8081:8081"
-    volumes:
-      - ./PaperlessREST:/app
-    environment:
-      - JAVA_OPTS=-Xmx512m
-    platform: linux/amd64
+    networks:
+      - paperless-network
 
-  PaperlessWebUI:
+  paperlessui:
     build:
-      context: ./PaperlessWebUI  # Verzeichnis für das Frontend
-      dockerfile: Dockerfile     # Dockerfile im PaperlessWebUI-Verzeichnis
+      context: ./PaperlessUI
+      dockerfile: Dockerfile
     ports:
       - "80:80"
     networks:
-      - app-network
-    environment:
-      - REACT_APP_API_URL=http://PaperlessREST:8081
+      - paperless-network
+    depends_on:
+      - paperlessrest
 
 networks:
-  app-network:
+  paperless-network:
     driver: bridge

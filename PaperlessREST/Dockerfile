@@ -1,28 +1,14 @@
-# Start from an OpenJDK base image
+# Use an official JDK runtime as a parent image
 FROM openjdk:17-jdk-alpine
 
-# Install Maven in the container
-RUN apk add --no-cache maven
-
-# Set the working directory inside the container
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy the Maven build file (pom.xml) first to leverage Docker layer caching
-COPY pom.xml .
+# Copy the JAR file into the container
+COPY target/PaperlessREST-0.0.1-SNAPSHOT.jar paperless-rest.jar
 
-# Download all the dependencies (this step helps to leverage Docker's cache)
-RUN mvn dependency:go-offline
-
-#todo: better copy jar file after building outside... ?
-
-# Copy the entire source code
-COPY src ./src
-
-# Build the Maven project (this runs clean and package)
-RUN mvn clean package
-
-# Expose the port that your application runs on (e.g., 8081 for a Spring Boot app)
+# Expose port 8081
 EXPOSE 8081
 
-# Set the entrypoint to run the jar file produced by Maven
-CMD ["java", "-jar", "target/SWKOM_WS2024_GroupE-0.0.1-SNAPSHOT.jar"]
+# Run the application
+ENTRYPOINT ["java", "-jar", "paperless-rest.jar"]
