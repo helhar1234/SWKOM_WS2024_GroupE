@@ -25,4 +25,4 @@ RUN mvn clean package
 EXPOSE 8081
 
 # Set the entrypoint to run the jar file produced by Maven
-CMD ["java", "-jar", "target/SWKOM_WS2024_GroupE-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "target/PaperlessREST-0.0.1-SNAPSHOT.jar"]
