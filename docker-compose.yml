@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  paperlessrest:
+    build:
+      context: ./PaperlessREST
+      dockerfile: Dockerfile
+    container_name: paperlessrest
+    ports:
+      - "8081:8081"
+    platform: linux/amd64
+
+  paperlessui:
+    build:
+      context: ./PaperlessUI
+      dockerfile: Dockerfile
+    container_name: paperlessui
+    ports:
+      - "80:80"
+    depends_on:
+      - paperlessrest
+    platform: linux/amd64
+
+networks:
+  paperless-network:
+    driver: bridge
