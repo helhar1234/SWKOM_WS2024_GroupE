@@ -22,6 +22,7 @@ import java.util.UUID;
 
 //todo: change status numbers to fixed status variables (HttpStatus.)
 //todo: no content in body for response?
+//todo: rework repo structure
 
 @RestController
 @RequestMapping("/api/documents")

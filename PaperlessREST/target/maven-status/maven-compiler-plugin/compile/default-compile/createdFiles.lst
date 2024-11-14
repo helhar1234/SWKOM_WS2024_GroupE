@@ -1,0 +1,8 @@
+at\technikum\paperlessrest\customExceptions\InvalidFileUploadException.class
+at\technikum\paperlessrest\controller\DocumentController.class
+at\technikum\paperlessrest\entities\Document.class
+at\technikum\paperlessrest\service\DocumentService.class
+at\technikum\paperlessrest\config\WebConfig.class
+at\technikum\paperlessrest\config\WebConfig$1.class
+at\technikum\paperlessrest\PaperlessRestApplication.class
+at\technikum\paperlessrest\customExceptions\DocumentNotFoundException.class
