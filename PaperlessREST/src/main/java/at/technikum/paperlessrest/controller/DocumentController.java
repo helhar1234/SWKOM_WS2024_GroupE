@@ -25,7 +25,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/documents")
-@CrossOrigin
 public class DocumentController {
 
     private final DocumentService documentService;
@@ -40,6 +39,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "400", description = "Bad request"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
+    @CrossOrigin
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadDocument(@RequestParam("file") MultipartFile file) {
         try {
@@ -62,6 +62,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "200", description = "Document found", content = @Content(schema = @Schema(implementation = Document.class))),
             @ApiResponse(responseCode = "404", description = "Document not found")
     })
+    @CrossOrigin
     @GetMapping("/{id}")
     public ResponseEntity<?> getDocument(@PathVariable UUID id) {
         try {
@@ -79,6 +80,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "200", description = "Documents found", content = @Content(schema = @Schema(implementation = Document.class))),
             @ApiResponse(responseCode = "404", description = "No documents found")
     })
+    @CrossOrigin
     @GetMapping()
     public ResponseEntity<?> getAllDocuments() {
         try {
