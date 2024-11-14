@@ -1,12 +1,26 @@
+version: '3.8'
+
 services:
   paperlessrest:
     build:
-      context: ./PaperlessREST   # Verzeichnis für das Backend
-      dockerfile: Dockerfile     # Dockerfile im PaperlessREST-Verzeichnis
+      context: ./PaperlessREST
+      dockerfile: Dockerfile
     ports:
       - "8081:8081"
-    volumes:
-      - ./PaperlessREST:/app
-    environment:
-      - JAVA_OPTS=-Xmx512m
-    platform: linux/amd64
+    networks:
+      - paperless-network
+
+  paperlessui:
+    build:
+      context: ./PaperlessUI
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    networks:
+      - paperless-network
+    depends_on:
+      - paperlessrest
+
+networks:
+  paperless-network:
+    driver: bridge
