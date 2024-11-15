@@ -1,4 +1,4 @@
-# Projekt: PaperlessREST
+# Projekt: Paperless
 
 ## Start Database
 Die DB wird gestartet, indem Docker Compose ausgeführt wird:
