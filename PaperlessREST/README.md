@@ -1,5 +1,5 @@
 
-# Projekt: PaperlessREST
+# Projekt: Paperless
 
 ## Swagger
 
