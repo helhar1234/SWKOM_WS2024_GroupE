@@ -26,7 +26,7 @@ In pgAdmin, click on "Add new Server"
 
 ## 3. Properties
 Fill in the needed Properties:
-![Properties 1](pgAdmin_Connection-Properties.png.png)
-![Properties 2](pgAdmin_Connection-Properties2.png.png)
+![Properties 1](pgAdmin_Connection-Properties.png)
+![Properties 2](pgAdmin_Connection-Properties2.png)
 
 POSTGRES NEEDS TO BE RUNNING FOR THIS TO WORK!
