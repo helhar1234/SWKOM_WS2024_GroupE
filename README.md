@@ -42,3 +42,18 @@ docker-compose down
 docker-compose start <servicename>
 ```
 
+## Problems with fetching Updates from Repository
+```bash
+git fetch
+```
+(not git fetch --all)
+
+```bash
+git reset --hard origin/<branch> 
+```
+(NOT git reset --hard HEAD)
+
+```bash
+git clean -fd 
+```
+(this is required to get rid of spurious files which reset doesn't get rid of)
