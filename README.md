@@ -35,3 +35,10 @@ Um die Container zu stoppen, nutze:
 ```bash
 docker-compose down
 ```
+
+### Only start single Services
+<servicename> can be found in the docker-compose.yml file, e.g. paperlessrest
+```bash
+docker-compose start <servicename>
+```
+

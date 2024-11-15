@@ -20,9 +20,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-//todo: change status numbers to fixed status variables (HttpStatus.)
-//todo: no content in body for response?
-
 @RestController
 @RequestMapping("/api/documents")
 public class DocumentController {
@@ -48,12 +45,12 @@ public class DocumentController {
             }
 
             Document document = documentService.uploadDocument(file.getOriginalFilename(), file.getContentType(), file.getSize());
-            return ResponseEntity.status(201).body("File uploaded successfully with id: " + document.getId());
+            return ResponseEntity.status(HttpStatus.CREATED).build();
 
         } catch (InvalidFileUploadException e) {
-            return ResponseEntity.status(400).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("File upload failed due to server error.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed due to server error.");
         }
     }
 
@@ -67,11 +64,11 @@ public class DocumentController {
     public ResponseEntity<?> getDocument(@PathVariable UUID id) {
         try {
             Optional<Document> document = documentService.getDocumentById(id);
-            return ResponseEntity.ok(document.get());
+            return ResponseEntity.status(HttpStatus.OK).body(document.get());
         } catch (InvalidFileUploadException | DocumentNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("An error occurred while retrieving the document.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while retrieving the document.");
         }
     }
 
@@ -85,11 +82,11 @@ public class DocumentController {
     public ResponseEntity<?> getAllDocuments() {
         try {
             List<Document> documents = documentService.getAllDocuments();
-            return ResponseEntity.ok(documents);
+            return ResponseEntity.status(HttpStatus.OK).body(documents);
         } catch (DocumentNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("An error occurred while retrieving the documents.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while retrieving the documents.");
         }
     }
 }
