@@ -8,8 +8,15 @@ services:
     container_name: paperlessrest
     ports:
       - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paperless_DB
+      SPRING_DATASOURCE_USERNAME: paperless
+      SPRING_DATASOURCE_PASSWORD: paperless
+      SPRING_PROFILES_ACTIVE: docker
     depends_on:
       - postgres
+    networks:
+      - paperless-network
     platform: linux/amd64
 
   paperlessui:
@@ -21,18 +28,24 @@ services:
       - "80:80"
     depends_on:
       - paperlessrest
+    networks:
+      - paperless-network
     platform: linux/amd64
 
   postgres:
     image: postgres:14-alpine
+    container_name: postgres
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
       - ~/apps/postgres:/var/lib/postgresql/data
+      - ./PaperlessDB:/docker-entrypoint-initdb.d
     environment:
       - POSTGRES_PASSWORD=paperless
       - POSTGRES_USER=paperless
       - POSTGRES_DB=paperless_DB
+    networks:
+      - paperless-network
 
 networks:
   paperless-network:

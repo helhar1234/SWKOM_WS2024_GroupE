@@ -1,0 +1,136 @@
+body {
+    background-image: linear-gradient(95.2deg, rgba(173, 252, 234, 1) 26.8%, rgba(192, 229, 246, 1) 64%);
+    font-family: 'Verdana', sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh; /* Für vertikale Zentrierung */
+    display: flex;
+    flex-direction: column; /* Ermöglicht flexibles Layout */
+}
+
+/* Navbar Styling */
+.navbar {
+    padding: 15px 25px;
+    background-color: rgba(255, 255, 255, 0.9); /* Transparenter Weißton */
+    margin: 5px 5px; /* Abstand oben und seitlich */
+    border-radius: 15px; /* Abgerundete Ecken */
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1); /* Schatteneffekt */
+}
+
+.navbar-nav {
+    display: flex;
+    flex-direction: row;
+    justify-content: center; /* Links zentrieren */
+    gap: 30px; /* Abstand zwischen Links */
+    list-style: none; /* Entfernt Aufzählungszeichen */
+    padding: 0;
+    margin: 0;
+}
+
+.navbar-nav .nav-item {
+    text-align: center;
+}
+
+.navbar-nav .nav-link {
+    font-size: 30px;
+    font-weight: normal;
+    color: #333;
+    text-decoration: none;
+    padding: 10px;
+    position: relative;
+    transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #50C878 !important; /* Grün bei Hover */
+}
+
+/* Grüne Unterlinie bei Hover */
+.navbar-nav .nav-link:hover::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #50C878;
+    transition: width 0.3s ease;
+}
+
+/* Versteckte Unterlinie standardmäßig */
+.navbar-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: #50C878;
+    transition: width 0.3s ease;
+}
+
+.nav-link.active {
+    color: #50C878 !important; /* Dauerhaft grün */
+}
+
+/* Markenname in grün, nur sichtbar bei Hamburger-Menü */
+.brand-green {
+    color: #50C878;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Standardmäßig bei größeren Bildschirmen unsichtbar */
+.d-lg-none {
+    display: none !important;
+}
+
+/* Sichtbar bei kleinen Bildschirmen */
+@media (max-width: 991px) {
+    .d-lg-none {
+        display: block !important;
+        text-align: center;
+    }
+}
+
+/* Responsive Links */
+@media (max-width: 767px) {
+    .navbar-nav {
+        flex-direction: column; /* Vertikale Anordnung */
+        gap: 15px;
+    }
+
+    .navbar-collapse {
+        text-align: center; /* Zentriert Links im kleinen Bildschirm */
+    }
+}
+
+/* Logo Container */
+.logo-container {
+    flex: 1; /* Füllt den verbleibenden Platz aus */
+    text-align: center; /* Horizontales Zentrieren */
+    display: flex;
+    justify-content: center; /* Zentriert horizontal */
+    align-items: center; /* Zentriert vertikal */
+}
+
+/* Logo Styling */
+.logo-text {
+    color: #50C878; /* Grün */
+    font-size: 15rem; /* Große Schrift für große Bildschirme */
+    font-weight: normal; /* Nicht fett */
+    margin: 0;
+}
+
+/* Logo Schriftgröße an Bildschirmbreite anpassen */
+@media (max-width: 991px) {
+    .logo-text {
+        font-size: 4rem; /* Schrift für mittlere Bildschirme */
+    }
+}
+
+@media (max-width: 767px) {
+    .logo-text {
+        font-size: 3rem; /* Schrift für kleine Bildschirme */
+    }
+}

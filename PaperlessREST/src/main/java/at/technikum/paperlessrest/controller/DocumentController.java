@@ -38,26 +38,45 @@ public class DocumentController {
     })
     @CrossOrigin
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadDocument(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            if (file.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("File is empty");
-            }
-
-            Document document = documentService.uploadDocument(file.getOriginalFilename(), file.getContentType(), file.getSize());
-            return ResponseEntity.status(HttpStatus.CREATED).build();
-
+            Document document = documentService.uploadDocument(file);
+            return ResponseEntity.status(HttpStatus.CREATED).body(document.getId());
         } catch (InvalidFileUploadException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed due to server error.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed.");
+        }
+    }
+
+    @Operation(summary = "Deletes a document")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Document deleted successfully", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Document not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @CrossOrigin
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteDocument(@PathVariable UUID id) {
+        try {
+            boolean deleted = documentService.deleteDocumentById(id);
+            if (deleted) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Document not found");
+            }
+        } catch (DocumentNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting document");
         }
     }
 
     @Operation(summary = "Fetches a document by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Document found", content = @Content(schema = @Schema(implementation = Document.class))),
-            @ApiResponse(responseCode = "404", description = "Document not found")
+            @ApiResponse(responseCode = "404", description = "Document not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @CrossOrigin
     @GetMapping("/{id}")
@@ -74,8 +93,8 @@ public class DocumentController {
 
     @Operation(summary = "Fetches all documents")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Documents found", content = @Content(schema = @Schema(implementation = Document.class))),
-            @ApiResponse(responseCode = "404", description = "No documents found")
+            @ApiResponse(responseCode = "200", description = "Documents found or empty list", content = @Content(schema = @Schema(implementation = Document.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @CrossOrigin
     @GetMapping()
@@ -83,10 +102,9 @@ public class DocumentController {
         try {
             List<Document> documents = documentService.getAllDocuments();
             return ResponseEntity.status(HttpStatus.OK).body(documents);
-        } catch (DocumentNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while retrieving the documents.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while retrieving the document.");
         }
     }
+
 }

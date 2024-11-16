@@ -1,35 +1,26 @@
 package at.technikum.paperlessrest.entities;
 
-import java.util.UUID;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name ="files")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
 public class Document {
-    private UUID id;
-    private String name;
-    private String contentType;
-    private long size;
+    @Id
+    private String id;
+    private String filename;
+    private long filesize;
+    private String filetype;
+    private byte[] file;
+    private LocalDateTime uploadDate;
 
-    // Constructor
-    public Document(String name, String contentType, long size) {
-        this.id = UUID.randomUUID();
-        this.name = name;
-        this.contentType = contentType;
-        this.size = size;
-    }
-
-    // Getters and Setters
-    public UUID getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getContentType() {
-        return contentType;
-    }
-
-    public long getSize() {
-        return size;
-    }
 }
