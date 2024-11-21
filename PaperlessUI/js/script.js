@@ -160,6 +160,8 @@ const initializeUploadFunctionality = () => {
       return;
     }
 
+    const file = fileInput.files[0];
+
     if (
       file.type !== "application/pdf" &&
       !file.name.toLowerCase().endsWith(".pdf")
@@ -169,7 +171,7 @@ const initializeUploadFunctionality = () => {
     }
 
     const formData = new FormData();
-    formData.append("file", fileInput.files[0]);
+    formData.append("file", file);
     uploadDocument(formData);
   });
 };
