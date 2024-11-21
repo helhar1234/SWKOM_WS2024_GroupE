@@ -1,6 +1,6 @@
 # Use an official JDK runtime as a parent image
 FROM openjdk:17-jdk-alpine
-
+CMD ["java", "-jar", "target/PaperlessREST-0.0.1-SNAPSHOT.jar"]
 # Set the working directory in the container
 WORKDIR /app
 
@@ -12,3 +12,5 @@ EXPOSE 8081
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "paperless-rest.jar"]
+
+
