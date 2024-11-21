@@ -54,7 +54,6 @@ public class DocumentService {
         return documentRepository.save(document);
     }
 
-
     public boolean deleteDocumentById(UUID id) {
         String idString = id.toString();
         if (!documentRepository.existsById(idString)) {
