@@ -13,8 +13,12 @@ services:
       SPRING_DATASOURCE_USERNAME: paperless
       SPRING_DATASOURCE_PASSWORD: paperless
       SPRING_PROFILES_ACTIVE: docker
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: paperless
+      SPRING_RABBITMQ_PASSWORD: paperless
     depends_on:
       - postgres
+      - rabbitmq
     networks:
       - paperless-network
     platform: linux/amd64
@@ -44,6 +48,18 @@ services:
       - POSTGRES_PASSWORD=paperless
       - POSTGRES_USER=paperless
       - POSTGRES_DB=paperless_DB
+    networks:
+      - paperless-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # RabbitMQ AMQP Port
+      - "15672:15672" # RabbitMQ Management Console
+    environment:
+      RABBITMQ_DEFAULT_USER: paperless
+      RABBITMQ_DEFAULT_PASS: paperless
     networks:
       - paperless-network
 

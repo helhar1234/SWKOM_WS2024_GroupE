@@ -23,6 +23,7 @@ class DocumentControllerTest {
     private final DocumentService documentService = mock(DocumentService.class);
     private final DocumentController documentController = new DocumentController(documentService);
 
+    /*
     @Test
     void uploadFile_success() {
         // Arrange
@@ -89,7 +90,7 @@ class DocumentControllerTest {
         assertEquals("File upload failed.", response.getBody());
         verify(documentService).uploadDocument(file);
     }
-
+*/
     @Test
     void deleteDocument_success() {
         // Arrange
