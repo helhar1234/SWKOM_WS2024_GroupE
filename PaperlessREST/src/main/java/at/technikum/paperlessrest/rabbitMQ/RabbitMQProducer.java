@@ -1,4 +1,4 @@
-package at.technikum.paperlessrest.producer;
+package at.technikum.paperlessrest.rabbitMQ;
 
 import at.technikum.paperlessrest.config.RabbitMQConfig;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -11,8 +11,8 @@ public class RabbitMQProducer {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    public void sendToOCRQueue(String documentPath) {
-        rabbitTemplate.convertAndSend(RabbitMQConfig.OCR_QUEUE, documentPath);
+    public void sendToQueue(String documentPath) {
+        rabbitTemplate.convertAndSend(RabbitMQConfig.QUEUE, documentPath);
     }
 }
 

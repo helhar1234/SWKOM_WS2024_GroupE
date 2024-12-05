@@ -3,6 +3,7 @@ package at.technikum.paperlessrest.controller;
 import at.technikum.paperlessrest.customExceptions.DocumentNotFoundException;
 import at.technikum.paperlessrest.customExceptions.InvalidFileUploadException;
 import at.technikum.paperlessrest.entities.Document;
+import at.technikum.paperlessrest.rabbitMQ.RabbitMQProducer;
 import at.technikum.paperlessrest.service.DocumentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,9 +26,11 @@ import java.util.UUID;
 public class DocumentController {
 
     private final DocumentService documentService;
+    private final RabbitMQProducer rabbitMQProducer;
 
-    public DocumentController(DocumentService documentService) {
+    public DocumentController(DocumentService documentService, RabbitMQProducer rabbitMQProducer) {
         this.documentService = documentService;
+        this.rabbitMQProducer = rabbitMQProducer;
     }
 
     @Operation(summary = "Uploads a document")
@@ -41,6 +44,7 @@ public class DocumentController {
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
             Document document = documentService.uploadDocument(file);
+            rabbitMQProducer.sendToQueue("File has been uploaded " + file.getName());
             return ResponseEntity.status(HttpStatus.CREATED).body(document.getId());
         } catch (InvalidFileUploadException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

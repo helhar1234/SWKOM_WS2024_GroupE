@@ -7,7 +7,7 @@ import at.technikum.paperlessrest.repository.DocumentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
-import at.technikum.paperlessrest.producer.RabbitMQProducer;
+import at.technikum.paperlessrest.rabbitMQ.RabbitMQProducer;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -51,8 +51,6 @@ public class DocumentService {
             document.setFiletype(filetype);
             document.setFile(file.getBytes());
             document.setUploadDate(LocalDateTime.now());
-
-            rabbitMQProducer.sendToOCRQueue("./test_file.pdf");
         } catch (IOException e) {
             throw new InvalidFileUploadException("Failed to read file content.");
         }

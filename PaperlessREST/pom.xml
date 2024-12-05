@@ -83,7 +83,6 @@
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
 
-
     </dependencies>
 
     <build>
@@ -103,6 +102,4 @@
             </plugin>
         </plugins>
     </build>
-
-
 </project>
