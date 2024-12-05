@@ -12,6 +12,7 @@ public class RabbitMQProducer {
     private RabbitTemplate rabbitTemplate;
 
     public void sendToQueue(String documentPath) {
+
         rabbitTemplate.convertAndSend(RabbitMQConfig.QUEUE, documentPath);
     }
 }
