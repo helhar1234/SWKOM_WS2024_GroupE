@@ -20,6 +20,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import lombok.extern.slf4j.Slf4j; // why do i need this??
+
 @Slf4j
 @RestController
 @RequestMapping("/api/documents")
