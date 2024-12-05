@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
+@Slf4j
 @RestController
 @RequestMapping("/api/documents")
 public class DocumentController {
@@ -45,10 +45,13 @@ public class DocumentController {
         try {
             Document document = documentService.uploadDocument(file);
             rabbitMQProducer.sendToQueue("File has been uploaded " + file.getName());
+            log.info("File has been uploaded " + file.getName() + " to the queue");
             return ResponseEntity.status(HttpStatus.CREATED).body(document.getId());
         } catch (InvalidFileUploadException e) {
+            log.warn("Invalid file upload: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
+            log.error("File upload failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed.");
         }
     }
@@ -65,13 +68,17 @@ public class DocumentController {
         try {
             boolean deleted = documentService.deleteDocumentById(id);
             if (deleted) {
+                log.info("Document with ID " + id + " has been deleted");
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
             } else {
+                log.info("Document with ID " + id + " not found");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Document not found");
             }
         } catch (DocumentNotFoundException e) {
+            log.warn("Document not found: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
+            log.error("Error deleting document: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting document");
         }
     }
@@ -87,10 +94,13 @@ public class DocumentController {
     public ResponseEntity<?> getDocument(@PathVariable UUID id) {
         try {
             Optional<Document> document = documentService.getDocumentById(id);
+            log.info("Document with ID " + id + " found");
             return ResponseEntity.status(HttpStatus.OK).body(document.get());
-        } catch (InvalidFileUploadException | DocumentNotFoundException e) {
+        } catch (InvalidFileUploadException | DocumentNotFoundException e) {    //todo:  why is this here? valid exception? (InvalidFileUploadException)
+            log.warn("Document not found: " + e.getMessage()); //if both exceptions are valid log in service to distinguish differences
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
+            log.error("Error retrieving document: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while retrieving the document.");
         }
     }
@@ -105,8 +115,10 @@ public class DocumentController {
     public ResponseEntity<?> getAllDocuments() {
         try {
             List<Document> documents = documentService.getAllDocuments();
+            log.info("All documents retrieved");
             return ResponseEntity.status(HttpStatus.OK).body(documents);
         } catch (Exception e) {
+            log.error("Error retrieving documents: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while retrieving the document.");
         }
     }
