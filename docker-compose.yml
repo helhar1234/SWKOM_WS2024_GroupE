@@ -19,6 +19,8 @@ services:
     depends_on:
       - postgres
       - rabbitmq
+    volumes:
+      - logs:/app/logs
     networks:
       - paperless-network
     platform: linux/amd64
@@ -32,6 +34,8 @@ services:
       - "80:80"
     depends_on:
       - paperlessrest
+    volumes:
+      - logs:/app/logs
     networks:
       - paperless-network
     platform: linux/amd64
@@ -44,6 +48,7 @@ services:
     volumes:
       - ~/apps/postgres:/var/lib/postgresql/data
       - ./PaperlessDB:/docker-entrypoint-initdb.d
+      - logs:/app/logs
     environment:
       - POSTGRES_PASSWORD=paperless
       - POSTGRES_USER=paperless
@@ -56,12 +61,17 @@ services:
     container_name: rabbitmq
     ports:
       - "5672:5672" # RabbitMQ AMQP Port
-      - "15672:15672" # RabbitMQ Management Console
+      - "9093:9093" # RabbitMQ Management Console
     environment:
       RABBITMQ_DEFAULT_USER: paperless
       RABBITMQ_DEFAULT_PASS: paperless
+    volumes:
+      - logs:/app/logs
     networks:
       - paperless-network
+
+volumes:
+  logs: {}
 
 networks:
   paperless-network:

@@ -4,6 +4,7 @@ import at.technikum.paperlessrest.customExceptions.DocumentNotFoundException;
 import at.technikum.paperlessrest.customExceptions.InvalidFileUploadException;
 import at.technikum.paperlessrest.entities.Document;
 import at.technikum.paperlessrest.repository.DocumentRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
