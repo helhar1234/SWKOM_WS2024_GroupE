@@ -61,7 +61,7 @@ services:
     container_name: rabbitmq
     ports:
       - "5672:5672" # RabbitMQ AMQP Port
-      - "9093:9093" # RabbitMQ Management Console
+      - "15672:15672" # RabbitMQ Management Console
     environment:
       RABBITMQ_DEFAULT_USER: paperless
       RABBITMQ_DEFAULT_PASS: paperless
