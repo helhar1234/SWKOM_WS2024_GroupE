@@ -70,6 +70,22 @@ services:
     networks:
       - paperless-network
 
+  paperlessworker:
+    build:
+      context: ./PaperlessWORKER
+      dockerfile: Dockerfile
+    container_name: paperlessworker
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: paperless
+      SPRING_RABBITMQ_PASSWORD: paperless
+      OCR_ENGINE: tesseract
+    depends_on:
+      - rabbitmq
+    networks:
+      - paperless-network
+
 volumes:
   logs: {}
 
