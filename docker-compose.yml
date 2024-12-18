@@ -75,6 +75,8 @@ services:
       context: ./PaperlessWORKER
       dockerfile: Dockerfile
     container_name: paperlessworker
+    ports:
+      - "8082:8082"
     environment:
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
@@ -83,6 +85,8 @@ services:
       OCR_ENGINE: tesseract
     depends_on:
       - rabbitmq
+    volumes:
+      - logs:/app/logs
     networks:
       - paperless-network
 
