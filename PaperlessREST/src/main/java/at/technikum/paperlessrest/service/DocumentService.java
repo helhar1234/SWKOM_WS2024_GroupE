@@ -1,83 +1,104 @@
 package at.technikum.paperlessrest.service;
 
-import at.technikum.paperlessrest.customExceptions.DocumentNotFoundException;
-import at.technikum.paperlessrest.customExceptions.InvalidFileUploadException;
 import at.technikum.paperlessrest.entities.Document;
+import at.technikum.paperlessrest.entities.DocumentWithFile;
 import at.technikum.paperlessrest.repository.DocumentRepository;
+import io.minio.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
-import at.technikum.paperlessrest.rabbitMQ.RabbitMQProducer;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
+import java.io.InputStream;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 public class DocumentService {
 
-    @Autowired
-    private RabbitMQProducer rabbitMQProducer;
-
+    private final MinioClient minioClient;
     private final DocumentRepository documentRepository;
+    private final RabbitTemplate rabbitTemplate;
+    private final String bucketName = "documents";
 
-    public DocumentService(DocumentRepository documentRepository) {
+    public DocumentService(MinioClient minioClient, DocumentRepository documentRepository, RabbitTemplate rabbitTemplate) {
+        this.minioClient = minioClient;
         this.documentRepository = documentRepository;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
-    public Document uploadDocument(MultipartFile file) {
-        // Validate the file
-        if (file == null || file.isEmpty()) {
-            throw new InvalidFileUploadException("File is empty. Please upload a valid file.");
+    public Document uploadDocument(MultipartFile file) throws Exception {
+        if (!file.getContentType().equals("application/pdf")) {
+            throw new IllegalArgumentException("Only PDF files are allowed.");
         }
 
-        String filename = file.getOriginalFilename();
-        String filetype = file.getContentType();
+        String id = UUID.randomUUID().toString();
+        Document document = Document.builder()
+                .id(id)
+                .filename(file.getOriginalFilename())
+                .filesize(file.getSize())
+                .filetype(file.getContentType())
+                .uploadDate(java.time.LocalDateTime.now())
+                .build();
 
-        // Validate MIME type and file extension
-        if (filetype == null || !filetype.equals("application/pdf") ||
-                (filename != null && !filename.toLowerCase().endsWith(".pdf"))) {
-            throw new InvalidFileUploadException("Invalid file type. Only PDF files are allowed.");
+        documentRepository.save(document);
+
+        if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())) {
+            minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
         }
 
-        // Build the Document object
-        Document document = new Document();
-        try {
-            document.setId(UUID.randomUUID().toString());
-            document.setFilename(filename);
-            document.setFilesize(file.getSize());
-            document.setFiletype(filetype);
-            document.setFile(file.getBytes());
-            document.setUploadDate(LocalDateTime.now());
-        } catch (IOException e) {
-            throw new InvalidFileUploadException("Failed to read file content.");
-        }
+        minioClient.putObject(
+                PutObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(id)
+                        .stream(file.getInputStream(), file.getSize(), -1)
+                        .contentType(file.getContentType())
+                        .build()
+        );
 
-        // Save the document to the database and return it
-        return documentRepository.save(document);
+        sendOCRJobMessage(id);
+        return document;
     }
 
-    public boolean deleteDocumentById(UUID id) {
-        String idString = id.toString();
-        if (!documentRepository.existsById(idString)) {
-            throw new DocumentNotFoundException("Document with ID " + id + " not found.");
+    public void deleteDocument(String id) throws Exception {
+        if (!documentRepository.existsById(id)) {
+            throw new IllegalArgumentException("Document not found");
         }
-        documentRepository.deleteById(idString);
-        return true;
+
+        documentRepository.deleteById(id);
+        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(id).build());
     }
 
-    public Optional<Document> getDocumentById(UUID id) {
-        String idString = id.toString();
-        return documentRepository.findById(idString)
-                .or(() -> {
-                    throw new DocumentNotFoundException("Document with ID " + id + " not found.");
-                });
+    public byte[] getDocumentFileById(String id) throws Exception {
+        try (InputStream stream = minioClient.getObject(GetObjectArgs.builder()
+                .bucket(bucketName)
+                .object(id)
+                .build())) {
+            return stream.readAllBytes();
+        }
     }
 
-    public List<Document> getAllDocuments() {
-        return documentRepository.findAll();
+    public List<DocumentWithFile> getAllDocuments() {
+        return documentRepository.findAll().stream().map(document -> {
+            try {
+                byte[] file = minioClient.getObject(GetObjectArgs.builder().bucket(bucketName).object(document.getId()).build()).readAllBytes();
+                return new DocumentWithFile(document, file);
+            } catch (Exception e) {
+                log.error("Error fetching file for document ID {}: {}", document.getId(), e.getMessage(), e);
+                return new DocumentWithFile(document, null);
+            }
+        }).collect(Collectors.toList());
+    }
+
+    private void sendOCRJobMessage(String documentId) {
+        String message = "{\"documentId\":\"" + documentId + "\"}";
+        rabbitTemplate.convertAndSend("OCR_QUEUE", message);
+        log.info("Message sent to OCR queue for document ID: {}", documentId);
+    }
+
+    public Document getDocumentById(String id) {
+        return documentRepository.findById(id).orElse(null);
     }
 }
