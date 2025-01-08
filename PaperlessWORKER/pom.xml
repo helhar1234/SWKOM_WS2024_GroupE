@@ -77,10 +77,11 @@
       <artifactId>json</artifactId>
       <version>20241224</version>
     </dependency>
-    <!-- Elasticsearch -->
+
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
+      <groupId>co.elastic.clients</groupId>
+      <artifactId>elasticsearch-java</artifactId>
+      <version>8.10.0</version>
     </dependency>
 
   </dependencies>

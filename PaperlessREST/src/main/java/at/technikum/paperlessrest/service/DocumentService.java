@@ -1,6 +1,8 @@
 package at.technikum.paperlessrest.service;
 
+import at.technikum.paperlessrest.elastic.ElasticsearchSearcher;
 import at.technikum.paperlessrest.entities.Document;
+import at.technikum.paperlessrest.entities.DocumentSearchResult;
 import at.technikum.paperlessrest.entities.DocumentWithFile;
 import at.technikum.paperlessrest.rabbitmq.RabbitMQSender;
 import at.technikum.paperlessrest.repository.DocumentRepository;
@@ -11,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -21,12 +24,14 @@ public class DocumentService {
     private final MinioClient minioClient;
     private final DocumentRepository documentRepository;
     private final RabbitMQSender rabbitMQSender; // Ersetzen RabbitTemplate durch RabbitMQProducer
+    private final ElasticsearchSearcher elasticsearchSearcher;
     private final String bucketName = "documents";
 
-    public DocumentService(MinioClient minioClient, DocumentRepository documentRepository, RabbitMQSender rabbitMQSender) {
+    public DocumentService(MinioClient minioClient, DocumentRepository documentRepository, RabbitMQSender rabbitMQSender, ElasticsearchSearcher elasticsearchSearcher) {
         this.minioClient = minioClient;
         this.documentRepository = documentRepository;
         this.rabbitMQSender = rabbitMQSender;
+        this.elasticsearchSearcher = elasticsearchSearcher;
     }
 
     public Document uploadDocument(MultipartFile file) throws Exception {
@@ -117,4 +122,36 @@ public class DocumentService {
         //log.info("Fetching document metadata by ID: {}", id);
         return documentRepository.findById(id).orElse(null);
     }
+
+    public List<DocumentWithFile> searchDocuments(String query) {
+        // Elasticsearch-Suche
+        log.info("Querying Elasticsearch with query: {}", query);
+        List<DocumentSearchResult> elasticResults = elasticsearchSearcher.searchDocuments(query);
+
+        if (elasticResults.isEmpty()) {
+            log.info("No documents found in Elasticsearch for query: {}", query);
+            return List.of();
+        }
+
+        // Ergänzung der Daten aus der Datenbank
+        log.info("Fetching additional data from database for Elasticsearch results");
+        return elasticResults.stream().map(result -> {
+            Document document = documentRepository.findById(result.getDocumentId()).orElse(null);
+            if (document == null) {
+                log.warn("Document with ID {} not found in database", result.getDocumentId());
+                return null;
+            }
+            try {
+                byte[] file = minioClient.getObject(GetObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(result.getDocumentId())
+                        .build()).readAllBytes();
+                return new DocumentWithFile(document, file);
+            } catch (Exception e) {
+                log.error("Error fetching file for document ID {}: {}", result.getDocumentId(), e.getMessage());
+                return new DocumentWithFile(document, null);
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
 }

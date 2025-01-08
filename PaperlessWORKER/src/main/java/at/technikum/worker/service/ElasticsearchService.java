@@ -1,4 +1,4 @@
-package at.technikum.worker.elasticsearch;
+package at.technikum.worker.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
@@ -11,9 +11,9 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-//@Service
-public class ElasticSearchService {
-/*
+@Service
+public class ElasticsearchService {
+
     @Autowired
     private ElasticsearchClient elasticsearchClient;
 
@@ -34,7 +34,6 @@ public class ElasticSearchService {
         // Send the index request to Elasticsearch
         IndexResponse response = elasticsearchClient.index(request);
 
-        return response.id();  // Returns the indexed document's ID
+        return response.id();
     }
- */
 }

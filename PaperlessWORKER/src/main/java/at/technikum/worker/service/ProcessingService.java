@@ -27,6 +27,9 @@ public class ProcessingService {
     @Autowired
     private RabbitMQSender rabbitMQSender;
 
+    @Autowired
+    private ElasticsearchService elasticsearchService;
+
     @RabbitListener(queues = RabbitMQConfig.PROCESSING_QUEUE)
     public void processOcrJob(String message) {
         //log.info("Received message from processing queue: {}", message);
@@ -55,6 +58,9 @@ public class ProcessingService {
             log.info("Starting OCR process for file: {}", tempFile.getName());
             String ocrText = ocrService.extractText(tempFile);
             // log.info("OCR process completed for document ID: {}. Extracted text: {}"+ documentId+ ocrText);
+
+            //Index Document for elastic
+            elasticsearchService.indexDocument(documentId, ocrText);
 
             // Send result to result_queue
             log.info("Sending OCR result to result queue for document ID: {}", documentId);

@@ -1,6 +1,9 @@
 package at.technikum.paperlessrest.controller;
 
+import at.technikum.paperlessrest.elastic.ElasticsearchConfig;
+import at.technikum.paperlessrest.elastic.ElasticsearchSearcher;
 import at.technikum.paperlessrest.entities.Document;
+import at.technikum.paperlessrest.entities.DocumentSearchResult;
 import at.technikum.paperlessrest.entities.DocumentWithFile;
 import at.technikum.paperlessrest.service.DocumentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,9 +26,11 @@ import java.util.List;
 public class DocumentController {
 
     private final DocumentService documentService;
+    private final ElasticsearchSearcher elasticsearchSearcher ;
 
-    public DocumentController(DocumentService documentService) {
+    public DocumentController(DocumentService documentService, ElasticsearchSearcher elasticsearchSearcher) {
         this.documentService = documentService;
+        this.elasticsearchSearcher = elasticsearchSearcher;
     }
 
     @Operation(summary = "Uploads a document")
@@ -114,4 +119,30 @@ public class DocumentController {
             return ResponseEntity.status(500).build();
         }
     }
+
+    @Operation(summary = "Searches documents by query and fetches additional data")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Documents retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = DocumentWithFile.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid query parameter"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/search")
+    public ResponseEntity<List<DocumentWithFile>> searchDocuments(@RequestParam String query) {
+        try {
+            if (query == null || query.trim().isEmpty()) {
+                log.error("Invalid query parameter: query cannot be null or empty");
+                return ResponseEntity.badRequest().build();
+            }
+
+            log.info("Searching documents with query: {}", query);
+            List<DocumentWithFile> results = documentService.searchDocuments(query);
+            return ResponseEntity.ok(results);
+
+        } catch (Exception e) {
+            log.error("Error occurred while searching documents: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).build();
+        }
+    }
+
 }

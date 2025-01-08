@@ -8,9 +8,9 @@ import org.elasticsearch.client.RestClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-//@Configuration
-public class ElasticSearchConfig {
-/*
+@Configuration
+public class ElasticsearchConfig {
+
     @Bean
     public ElasticsearchClient elasticsearchClient() {
         RestClient restClient = RestClient.builder(
@@ -25,6 +25,5 @@ public class ElasticSearchConfig {
         // Create the API client
         return new ElasticsearchClient(transport);
     }
-
- */
 }
+
