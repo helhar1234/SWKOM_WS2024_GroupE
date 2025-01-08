@@ -1,136 +1,150 @@
+/* General Body Styling */
 body {
     background-image: linear-gradient(95.2deg, rgba(173, 252, 234, 1) 26.8%, rgba(192, 229, 246, 1) 64%);
     font-family: 'Verdana', sans-serif;
     margin: 0;
     padding: 0;
-    height: 100vh; /* Für vertikale Zentrierung */
-    display: flex;
-    flex-direction: column; /* Ermöglicht flexibles Layout */
 }
 
 /* Navbar Styling */
 .navbar {
-    padding: 15px 25px;
-    background-color: rgba(255, 255, 255, 0.9); /* Transparenter Weißton */
-    margin: 5px 5px; /* Abstand oben und seitlich */
-    border-radius: 15px; /* Abgerundete Ecken */
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1); /* Schatteneffekt */
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.navbar-nav {
+.navbar-brand {
+    font-weight: bold;
+    color: #50C878;
+    font-size: 1.5rem;
+}
+
+/* Search Bar */
+.search-container {
     display: flex;
-    flex-direction: row;
-    justify-content: center; /* Links zentrieren */
-    gap: 30px; /* Abstand zwischen Links */
-    list-style: none; /* Entfernt Aufzählungszeichen */
-    padding: 0;
-    margin: 0;
+    justify-content: flex-end;
+    margin-top: 80px;
+    margin-bottom: 15px;
 }
 
-.navbar-nav .nav-item {
-    text-align: center;
+.search-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-right: 10px;
 }
 
-.navbar-nav .nav-link {
-    font-size: 30px;
-    font-weight: normal;
-    color: #333;
-    text-decoration: none;
-    padding: 10px;
-    position: relative;
-    transition: color 0.3s ease, text-decoration 0.3s ease;
+.search-bar .form-control {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    width: 250px;
 }
 
-.navbar-nav .nav-link:hover {
-    color: #50C878 !important; /* Grün bei Hover */
+.search-bar .btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    background-color: #50C878;
+    border: none;
 }
 
-/* Grüne Unterlinie bei Hover */
-.navbar-nav .nav-link:hover::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
+/* Table Styling */
+.table-container {
+    margin: 0 5px;
+    overflow-x: auto;
+}
+
+.table {
+    width: calc(100% - 10px);
+    margin: auto;
+    border-collapse: collapse;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.table thead {
+    background-color: #50C878;
+    color: white;
+    text-align: left;
+}
+
+.table thead th {
+    padding: 15px;
+}
+
+.table tbody tr {
+    transition: all 0.3s ease-in-out;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(173, 252, 234, 0.2);
+}
+
+.table tbody td {
+    padding: 15px;
+}
+
+/* Actions Column */
+.table tbody td .action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+/* Floating Button Styling */
+.floating-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #50C878;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floating-button svg {
+    fill: white;
+    width: 30px;
+    height: 30px;
+}
+
+/* Loader Styling */
+.loader {
+    position: fixed;
+    top: 0;
     left: 0;
     width: 100%;
-    height: 2px;
-    background-color: #50C878;
-    transition: width 0.3s ease;
-}
-
-/* Versteckte Unterlinie standardmäßig */
-.navbar-nav .nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background-color: #50C878;
-    transition: width 0.3s ease;
-}
-
-.nav-link.active {
-    color: #50C878 !important; /* Dauerhaft grün */
-}
-
-/* Markenname in grün, nur sichtbar bei Hamburger-Menü */
-.brand-green {
-    color: #50C878;
-    font-size: 20px;
-    font-weight: bold;
-}
-
-/* Standardmäßig bei größeren Bildschirmen unsichtbar */
-.d-lg-none {
-    display: none !important;
-}
-
-/* Sichtbar bei kleinen Bildschirmen */
-@media (max-width: 991px) {
-    .d-lg-none {
-        display: block !important;
-        text-align: center;
-    }
-}
-
-/* Responsive Links */
-@media (max-width: 767px) {
-    .navbar-nav {
-        flex-direction: column; /* Vertikale Anordnung */
-        gap: 15px;
-    }
-
-    .navbar-collapse {
-        text-align: center; /* Zentriert Links im kleinen Bildschirm */
-    }
-}
-
-/* Logo Container */
-.logo-container {
-    flex: 1; /* Füllt den verbleibenden Platz aus */
-    text-align: center; /* Horizontales Zentrieren */
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
     display: flex;
-    justify-content: center; /* Zentriert horizontal */
-    align-items: center; /* Zentriert vertikal */
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
 }
 
-/* Logo Styling */
-.logo-text {
-    color: #50C878; /* Grün */
-    font-size: 15rem; /* Große Schrift für große Bildschirme */
-    font-weight: normal; /* Nicht fett */
-    margin: 0;
+.loader::after {
+    content: '';
+    width: 50px;
+    height: 50px;
+    border: 5px solid #50C878;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
 }
 
-/* Logo Schriftgröße an Bildschirmbreite anpassen */
-@media (max-width: 991px) {
-    .logo-text {
-        font-size: 4rem; /* Schrift für mittlere Bildschirme */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
     }
-}
-
-@media (max-width: 767px) {
-    .logo-text {
-        font-size: 3rem; /* Schrift für kleine Bildschirme */
+    to {
+        transform: rotate(360deg);
     }
 }

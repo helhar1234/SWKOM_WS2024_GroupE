@@ -18,7 +18,6 @@ services:
       SPRING_RABBITMQ_PASSWORD: paperless
     depends_on:
       - postgres
-      - rabbitmq
     volumes:
       - logs:/app/logs
     networks:
@@ -46,8 +45,6 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ~/apps/postgres:/var/lib/postgresql/data
-      - ./PaperlessDB:/docker-entrypoint-initdb.d
       - logs:/app/logs
     environment:
       - POSTGRES_PASSWORD=paperless
@@ -69,6 +66,43 @@ services:
       - logs:/app/logs
     networks:
       - paperless-network
+  
+  minio:
+    image: minio/minio
+    container_name: minio
+    command: server /data --console-address ":9090"
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    environment:
+      MINIO_ROOT_USER: paperless
+      MINIO_ROOT_PASSWORD: paperless
+    volumes:
+      - ./minio_data:/data
+    networks:
+      - paperless-network
+
+
+  paperlessworker:
+    build:
+      context: ./PaperlessWORKER
+      dockerfile: Dockerfile
+    container_name: paperlessworker
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: paperless
+      SPRING_RABBITMQ_PASSWORD: paperless
+    ports:
+      - "8082:8082"
+    depends_on:
+      - rabbitmq
+      - minio
+    volumes:
+      - logs:/app/logs
+    networks:
+      - paperless-network
+
 
 volumes:
   logs: {}
