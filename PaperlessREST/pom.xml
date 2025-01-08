@@ -84,12 +84,6 @@
             <version>8.5.1</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-rest-client</artifactId>
-            <version>8.10.0</version> <!-- Match your Elasticsearch version -->
-        </dependency>
-
 
     </dependencies>
 

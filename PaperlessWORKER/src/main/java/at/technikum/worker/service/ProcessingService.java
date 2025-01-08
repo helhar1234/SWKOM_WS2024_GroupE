@@ -4,6 +4,7 @@ import at.technikum.worker.rabbitMQ.RabbitMQConfig;
 import at.technikum.worker.rabbitMQ.RabbitMQSender;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
+@Slf4j
 @Service
 public class ProcessingService {
 
@@ -27,13 +29,15 @@ public class ProcessingService {
 
     @RabbitListener(queues = RabbitMQConfig.PROCESSING_QUEUE)
     public void processOcrJob(String message) {
+        //log.info("Received message from processing queue: {}", message);
+
         try {
             JSONObject jsonMessage = new JSONObject(message);
-            System.out.println(jsonMessage);
             String documentId = jsonMessage.getString("documentId");
-            System.out.println("Processing document with ID: " + documentId);
+            //log.info("Processing OCR job for document ID: {}", documentId);
 
             // Fetch the document from MinIO
+            log.info("Fetching document from MinIO for document ID: {}", documentId);
             InputStream documentStream = minioClient.getObject(
                     GetObjectArgs.builder().bucket("documents").object(documentId).build());
 
@@ -44,18 +48,21 @@ public class ProcessingService {
                 while ((bytesRead = documentStream.read(buffer)) != -1) {
                     fos.write(buffer, 0, bytesRead);
                 }
+                //log.info("File successfully downloaded to: {}", tempFile.getAbsolutePath());
             }
 
             // Perform OCR
+            log.info("Starting OCR process for file: {}", tempFile.getName());
             String ocrText = ocrService.extractText(tempFile);
-            System.out.println("OCR Output: \n" + ocrText);
+            // log.info("OCR process completed for document ID: {}. Extracted text: {}"+ documentId+ ocrText);
 
             // Send result to result_queue
+            log.info("Sending OCR result to result queue for document ID: {}", documentId);
             rabbitMQSender.sendToResultQueue(documentId, ocrText);
+            log.info("OCR result successfully sent to result queue.");
 
         } catch (Exception e) {
-            System.err.println("Error processing OCR job: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error processing OCR job: {}", e.getMessage(), e);
         }
     }
 }

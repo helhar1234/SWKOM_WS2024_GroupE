@@ -45,7 +45,6 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ~/apps/postgres:/var/lib/postgresql/data
       - logs:/app/logs
     environment:
       - POSTGRES_PASSWORD=paperless
@@ -99,6 +98,8 @@ services:
     depends_on:
       - rabbitmq
       - minio
+    volumes:
+      - logs:/app/logs
     networks:
       - paperless-network
 

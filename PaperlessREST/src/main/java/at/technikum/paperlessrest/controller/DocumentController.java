@@ -34,7 +34,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "400", description = "Invalid file format or bad request"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Document> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
             Document document = documentService.uploadDocument(file);

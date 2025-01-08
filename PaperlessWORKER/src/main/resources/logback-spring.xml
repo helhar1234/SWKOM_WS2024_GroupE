@@ -4,7 +4,7 @@
 
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <!-- Datei-Name mit Datum -->
-        <file>${LOG_PATH}/${currentDate}-paperless-rest.log</file>
+        <file>${LOG_PATH}/${currentDate}-paperless-OCRWorker.log</file>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
