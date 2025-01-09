@@ -18,6 +18,9 @@ services:
       SPRING_RABBITMQ_PASSWORD: paperless
     depends_on:
       - postgres
+      - rabbitmq
+      - elasticsearch
+      - minio
     volumes:
       - logs:/app/logs
     networks:
@@ -98,6 +101,7 @@ services:
     depends_on:
       - rabbitmq
       - minio
+      - elasticsearch
     volumes:
       - logs:/app/logs
     networks:
@@ -118,7 +122,7 @@ services:
       - "9200:9200"
       - "9300:9300"
     volumes:
-      - es-data:/usr/share/elasticsearch/data  
+      - es-data:/usr/share/elasticsearch/data
     networks:
       - paperless-network                
 
