@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -128,30 +129,46 @@ public class DocumentService {
         log.info("Querying Elasticsearch with query: {}", query);
         List<DocumentSearchResult> elasticResults = elasticsearchSearcher.searchDocuments(query);
 
-        if (elasticResults.isEmpty()) {
-            log.info("No documents found in Elasticsearch for query: {}", query);
-            return List.of();
+        // Datenbank-Suche nach Dateinamen und IDs
+        log.info("Querying database for filenames and IDs containing: {}", query);
+        List<Document> databaseMatches = new ArrayList<>();
+        databaseMatches.addAll(documentRepository.findByFilenameContainingIgnoreCase(query));
+        databaseMatches.addAll(documentRepository.findByIdContainingIgnoreCase(query));
+
+        // Ergebnisse zusammenführen
+        log.info("Merging Elasticsearch and database results");
+        List<Document> allDocuments = new ArrayList<>();
+
+        // Elasticsearch-Ergebnisse zur Liste hinzufügen
+        for (DocumentSearchResult result : elasticResults) {
+            Document document = documentRepository.findById(result.getDocumentId()).orElse(null);
+            if (document != null) {
+                allDocuments.add(document);
+            }
         }
 
-        // Ergänzung der Daten aus der Datenbank
-        log.info("Fetching additional data from database for Elasticsearch results");
-        return elasticResults.stream().map(result -> {
-            Document document = documentRepository.findById(result.getDocumentId()).orElse(null);
-            if (document == null) {
-                log.warn("Document with ID {} not found in database", result.getDocumentId());
-                return null;
-            }
+        // Datenbank-Ergebnisse zur Liste hinzufügen (ohne Duplikate)
+        allDocuments.addAll(
+                databaseMatches.stream()
+                        .filter(doc -> allDocuments.stream().noneMatch(d -> d.getId().equals(doc.getId())))
+                        .collect(Collectors.toList())
+        );
+
+        // Zu DocumentWithFile mappen
+        log.info("Fetching file data for {} documents", allDocuments.size());
+        return allDocuments.stream().map(document -> {
             try {
                 byte[] file = minioClient.getObject(GetObjectArgs.builder()
                         .bucket(bucketName)
-                        .object(result.getDocumentId())
+                        .object(document.getId())
                         .build()).readAllBytes();
                 return new DocumentWithFile(document, file);
             } catch (Exception e) {
-                log.error("Error fetching file for document ID {}: {}", result.getDocumentId(), e.getMessage());
+                log.error("Error fetching file for document ID {}: {}", document.getId(), e.getMessage());
                 return new DocumentWithFile(document, null);
             }
-        }).filter(Objects::nonNull).collect(Collectors.toList());
+        }).collect(Collectors.toList());
     }
+
 
 }
