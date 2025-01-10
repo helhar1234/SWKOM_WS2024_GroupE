@@ -3,13 +3,13 @@
 
 ## Übersicht
 
-Dieses Projekt enthält einen REST-Server und ein WebUI, der mit Docker Compose in Containern ausgeführt wird. Der Server wird auf dem lokalen Port 8081 bereitgestellt, und Swagger ist ebenfalls verfügbar. Die WebUI wird auf dem lokalen Port 80 bereitgestellt.
+Dieses Projekt enthält eine Softwarearchitektur mit UI, REST-Schnittstelle, OCR-Worker, ElasticSearch, RabbitMQ, MinIO und PostgreSQL. Diese Services werden mit Docker Compose in Containern ausgeführt. 
 
 ## Voraussetzungen
 
 - Docker installiert
 - Docker Compose installiert
-- Das Projekt enthält funktionierende `Dockerfiles` in den zugehörigen Projektordnern und das `docker-compose.yml`.
+- Jedes Projekt enthält funktionierende `Dockerfiles` in den zugehörigen Projektordnern und das `docker-compose.yml`.
 
 ## Docker Compose Befehle
 
