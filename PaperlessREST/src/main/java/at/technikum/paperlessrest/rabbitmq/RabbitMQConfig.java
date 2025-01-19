@@ -11,9 +11,16 @@ public class RabbitMQConfig {
     public static final String EXCHANGE = "document_exchange";
     public static final String ROUTING_KEY = "document_routing_key";
 
+    public static final String RESULT_QUEUE = "document_result_queue";
+
     @Bean
     public Queue queue() {
         return new Queue(QUEUE, true);
+    }
+
+    @Bean
+    public Queue result_queue() {
+        return new Queue(RESULT_QUEUE, true);
     }
 
 

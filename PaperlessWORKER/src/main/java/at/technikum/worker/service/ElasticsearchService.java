@@ -34,4 +34,6 @@ public class ElasticsearchService {
         // Send the index request to Elasticsearch
         IndexResponse response = elasticsearchClient.index(request);
 
-        return response.id();chat
+        return response.id();
+    }
+}

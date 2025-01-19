@@ -56,8 +56,9 @@ docker-compose start <servicename>
    - The database for storing document metadata.
    - User: `paperless`, Password: `paperless`, Database: `paperless_DB`.
 
-4. **Adminer** (`...`):
-   - missing
+4. **Adminer** (`localhost:9091`):
+   - Database Administration Tool
+   - Database System: `PostgreSQL`, Server: `postgres`, User: `paperless`, Password: `paperless`, Database: `paperless_DB`
 
 5. **RabbitMQ** (`localhost:15672` for UI, `localhost:5672` for messaging):
    - Message broker for communication between services.

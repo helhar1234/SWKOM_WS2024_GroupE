@@ -1,6 +1,7 @@
 package at.technikum.worker.rabbitMQ;
 
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -34,14 +35,14 @@ public class RabbitMQSender {
     }
 
     public void sendToResultQueue(String documentId, String ocrText) {
-        String jsonMessage = String.format("{\"documentId\": \"%s\", \"ocrText\": \"%s\"}", documentId, ocrText);
-        //log.info("Preparing to send OCR result to result queue: {}", jsonMessage);
-
+        String message = "{\"documentId\":\"" + documentId + "\"}";
         try {
-            rabbitTemplate.convertAndSend(resultQueue, jsonMessage);
-            //log.info("OCR result successfully sent to result queue: {}", jsonMessage);
+            rabbitTemplate.convertAndSend(resultQueue, message);
+            log.info("Message successfully sent to RabbitMQ for document ID: {}", documentId);
         } catch (Exception e) {
-            log.error("Failed to send OCR result to result queue: {}", jsonMessage, e);
+            log.error("Failed to send message to RabbitMQ for document ID: {}", documentId, e);
         }
     }
+
+
 }

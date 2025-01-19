@@ -49,6 +49,7 @@ public class DocumentService {
                 .filesize(file.getSize())
                 .filetype(file.getContentType())
                 .uploadDate(java.time.LocalDateTime.now())
+                .ocrJobDone(false)
                 .build();
 
         //log.info("Saving document metadata to database: {}", document);

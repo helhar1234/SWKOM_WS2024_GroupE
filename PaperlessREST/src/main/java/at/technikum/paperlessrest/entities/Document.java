@@ -17,10 +17,11 @@ import java.time.LocalDateTime;
 public class Document {
 
     @Id
-    private String id; // UUID as the unique identifier for each document
+    private String id;
 
-    private String filename; // Original file name
-    private long filesize; // File size in bytes
-    private String filetype; // MIME type of the file (e.g., application/pdf)
-    private LocalDateTime uploadDate; // Timestamp when the document was uploaded
+    private String filename;
+    private long filesize;
+    private String filetype;
+    private LocalDateTime uploadDate;
+    private boolean ocrJobDone;
 }
