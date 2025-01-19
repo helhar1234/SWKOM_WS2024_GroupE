@@ -1,13 +1,25 @@
 package at.technikum.paperlessrest.controller;
 
+import at.technikum.paperlessrest.entities.Document;
+import at.technikum.paperlessrest.entities.DocumentWithFile;
+import at.technikum.paperlessrest.service.DocumentService;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
+
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.http.HttpStatus.*;
+
 class DocumentControllerTest {
-/*
-    private final RabbitMQProducer rabbitMQProducer = mock(RabbitMQProducer.class);
+
     private final DocumentService documentService = mock(DocumentService.class);
-    private final DocumentController documentController = new DocumentController(documentService, rabbitMQProducer);
+    private final DocumentController documentController = new DocumentController(documentService, null);
 
     @Test
-    void uploadFile_success() {
+    void uploadFile_success() throws Exception {
         // Arrange
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -19,41 +31,39 @@ class DocumentControllerTest {
         Document document = new Document();
         document.setId("123e4567-e89b-12d3-a456-426614174000");
 
-        when(documentService.uploadDocument(file)).thenReturn(document);
+        when(documentService.uploadFile(file)).thenReturn(document);
 
         // Act
-        ResponseEntity<?> response = documentController.uploadFile(file);
+        ResponseEntity<Document> response = documentController.uploadFile(file);
 
         // Assert
         assertEquals(CREATED, response.getStatusCode());
-        assertEquals(document.getId(), response.getBody());
-        verify(documentService).uploadDocument(file);
+        assertEquals(document, response.getBody());
+        verify(documentService).uploadFile(file);
     }
 
     @Test
-    void uploadFile_invalidFileUpload() {
+    void uploadFile_invalidFileFormat() throws Exception {
         // Arrange
-        MockMultipartFile invalidFile = new MockMultipartFile(
+        MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "invalid.txt",
                 "text/plain",
                 "Sample text content".getBytes()
         );
 
-        when(documentService.uploadDocument(invalidFile))
-                .thenThrow(new InvalidFileUploadException("Invalid file type."));
+        when(documentService.uploadFile(file)).thenThrow(new IllegalArgumentException("Invalid file format."));
 
         // Act
-        ResponseEntity<?> response = documentController.uploadFile(invalidFile);
+        ResponseEntity<Document> response = documentController.uploadFile(file);
 
         // Assert
         assertEquals(BAD_REQUEST, response.getStatusCode());
-        assertEquals("Invalid file type.", response.getBody());
-        verify(documentService).uploadDocument(invalidFile);
+        verify(documentService).uploadFile(file);
     }
 
     @Test
-    void uploadFile_internalServerError() {
+    void uploadFile_internalServerError() throws Exception {
         // Arrange
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -62,123 +72,122 @@ class DocumentControllerTest {
                 "Sample PDF content".getBytes()
         );
 
-        when(documentService.uploadDocument(file)).thenThrow(new RuntimeException("Unexpected error"));
+        when(documentService.uploadFile(file)).thenThrow(new RuntimeException("Unexpected error"));
 
         // Act
-        ResponseEntity<?> response = documentController.uploadFile(file);
+        ResponseEntity<Document> response = documentController.uploadFile(file);
 
         // Assert
         assertEquals(INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals("File upload failed.", response.getBody());
-        verify(documentService).uploadDocument(file);
+        verify(documentService).uploadFile(file);
     }
 
     @Test
-    void deleteDocument_success() {
+    void uploadFile_emptyFile() throws Exception {
         // Arrange
-        UUID documentId = UUID.randomUUID();
-        when(documentService.deleteDocumentById(documentId)).thenReturn(true);
+        MockMultipartFile file = new MockMultipartFile("file", "empty.pdf", "application/pdf", new byte[0]);
+
+        when(documentService.uploadFile(file)).thenThrow(new IllegalArgumentException("File is empty."));
 
         // Act
-        ResponseEntity<?> response = documentController.deleteDocument(documentId);
+        ResponseEntity<Document> response = documentController.uploadFile(file);
 
         // Assert
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        assertNull(response.getBody());
-        verify(documentService).deleteDocumentById(documentId);
+        assertEquals(BAD_REQUEST, response.getStatusCode());
+        verify(documentService).uploadFile(file);
     }
 
     @Test
-    void deleteDocument_failure() {
+    void deleteDocument_success() throws Exception {
         // Arrange
-        UUID documentId = UUID.randomUUID();
-        when(documentService.deleteDocumentById(documentId)).thenReturn(false);
+        String documentId = "123e4567-e89b-12d3-a456-426614174000";
+        doNothing().when(documentService).deleteDocument(documentId);
 
         // Act
-        ResponseEntity<?> response = documentController.deleteDocument(documentId);
+        ResponseEntity<Void> response = documentController.deleteDocument(documentId);
 
         // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Document not found", response.getBody());
-        verify(documentService).deleteDocumentById(documentId);
+        assertEquals(NO_CONTENT, response.getStatusCode());
+        verify(documentService).deleteDocument(documentId);
     }
 
     @Test
-    void deleteDocument_notFound() {
+    void deleteDocument_notFound() throws Exception {
         // Arrange
-        UUID documentId = UUID.randomUUID();
-        when(documentService.deleteDocumentById(documentId)).thenThrow(new DocumentNotFoundException("Document with ID " + documentId + " not found."));
+        String documentId = "123e4567-e89b-12d3-a456-426614174000";
+        doThrow(new IllegalArgumentException("Document not found"))
+                .when(documentService).deleteDocument(documentId);
 
         // Act
-        ResponseEntity<?> response = documentController.deleteDocument(documentId);
+        ResponseEntity<Void> response = documentController.deleteDocument(documentId);
 
         // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Document with ID " + documentId + " not found.", response.getBody());
-        verify(documentService).deleteDocumentById(documentId);
+        assertEquals(NOT_FOUND, response.getStatusCode());
+        verify(documentService).deleteDocument(documentId);
     }
 
     @Test
-    void deleteDocument_internalServerError() {
+    void deleteDocument_internalServerError() throws Exception {
         // Arrange
-        UUID documentId = UUID.randomUUID();
-        when(documentService.deleteDocumentById(documentId)).thenThrow(new RuntimeException("Unexpected error"));
+        String documentId = "123e4567-e89b-12d3-a456-426614174000";
+        doThrow(new RuntimeException("Unexpected error")).when(documentService).deleteDocument(documentId);
 
         // Act
-        ResponseEntity<?> response = documentController.deleteDocument(documentId);
+        ResponseEntity<Void> response = documentController.deleteDocument(documentId);
 
         // Assert
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals("Error deleting document", response.getBody());
-        verify(documentService).deleteDocumentById(documentId);
+        assertEquals(INTERNAL_SERVER_ERROR, response.getStatusCode());
+        verify(documentService).deleteDocument(documentId);
     }
 
     @Test
-    void getDocument_success() {
+    void getDocumentById_success() throws Exception {
         // Arrange
-        UUID documentId = UUID.randomUUID();
+        String documentId = "123e4567-e89b-12d3-a456-426614174000";
+        byte[] fileContent = "Sample PDF content".getBytes();
         Document document = new Document();
-        document.setId(documentId.toString());
+        document.setId(documentId);
         document.setFilename("test.pdf");
 
-        when(documentService.getDocumentById(documentId)).thenReturn(Optional.of(document));
+        when(documentService.getDocumentById(documentId)).thenReturn(document);
+        when(documentService.getDocumentFileById(documentId)).thenReturn(fileContent);
 
         // Act
-        ResponseEntity<?> response = documentController.getDocument(documentId);
+        ResponseEntity<byte[]> response = documentController.getDocumentById(documentId);
 
         // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(document, response.getBody());
+        assertEquals(OK, response.getStatusCode());
+        assertArrayEquals(fileContent, response.getBody());
+        verify(documentService).getDocumentById(documentId);
+        verify(documentService).getDocumentFileById(documentId);
+    }
+
+    @Test
+    void getDocumentById_notFound() {
+        // Arrange
+        String documentId = "123e4567-e89b-12d3-a456-426614174000";
+
+        when(documentService.getDocumentById(documentId)).thenReturn(null);
+
+        // Act
+        ResponseEntity<byte[]> response = documentController.getDocumentById(documentId);
+
+        // Assert
+        assertEquals(NOT_FOUND, response.getStatusCode());
         verify(documentService).getDocumentById(documentId);
     }
 
     @Test
-    void getDocument_notFound() {
+    void getDocumentById_internalServerError() {
         // Arrange
-        UUID documentId = UUID.randomUUID();
-        when(documentService.getDocumentById(documentId)).thenThrow(new DocumentNotFoundException("Document with ID " + documentId + " not found."));
-
-        // Act
-        ResponseEntity<?> response = documentController.getDocument(documentId);
-
-        // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Document with ID " + documentId + " not found.", response.getBody());
-        verify(documentService).getDocumentById(documentId);
-    }
-
-    @Test
-    void getDocument_internalServerError() {
-        // Arrange
-        UUID documentId = UUID.randomUUID();
+        String documentId = "123e4567-e89b-12d3-a456-426614174000";
         when(documentService.getDocumentById(documentId)).thenThrow(new RuntimeException("Unexpected error"));
 
         // Act
-        ResponseEntity<?> response = documentController.getDocument(documentId);
+        ResponseEntity<byte[]> response = documentController.getDocumentById(documentId);
 
         // Assert
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals("An error occurred while retrieving the document.", response.getBody());
+        assertEquals(INTERNAL_SERVER_ERROR, response.getStatusCode());
         verify(documentService).getDocumentById(documentId);
     }
 
@@ -186,22 +195,29 @@ class DocumentControllerTest {
     void getAllDocuments_success() {
         // Arrange
         Document document1 = new Document();
-        document1.setId(UUID.randomUUID().toString());
-        document1.setFilename("test1.pdf");
+        document1.setId("1");
+        document1.setFilename("doc1.pdf");
+
+        byte[] fileContent1 = "Content 1".getBytes();
 
         Document document2 = new Document();
-        document2.setId(UUID.randomUUID().toString());
-        document2.setFilename("test2.pdf");
+        document2.setId("2");
+        document2.setFilename("doc2.pdf");
 
-        List<Document> documents = Arrays.asList(document1, document2);
+        byte[] fileContent2 = "Content 2".getBytes();
+
+        DocumentWithFile doc1 = new DocumentWithFile(document1, fileContent1);
+        DocumentWithFile doc2 = new DocumentWithFile(document2, fileContent2);
+
+        List<DocumentWithFile> documents = List.of(doc1, doc2);
 
         when(documentService.getAllDocuments()).thenReturn(documents);
 
         // Act
-        ResponseEntity<?> response = documentController.getAllDocuments();
+        ResponseEntity<List<DocumentWithFile>> response = documentController.getAllDocuments();
 
         // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(OK, response.getStatusCode());
         assertEquals(documents, response.getBody());
         verify(documentService).getAllDocuments();
     }
@@ -212,13 +228,58 @@ class DocumentControllerTest {
         when(documentService.getAllDocuments()).thenThrow(new RuntimeException("Unexpected error"));
 
         // Act
-        ResponseEntity<?> response = documentController.getAllDocuments();
+        ResponseEntity<List<DocumentWithFile>> response = documentController.getAllDocuments();
 
         // Assert
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals("An error occurred while retrieving the document.", response.getBody());
+        assertEquals(INTERNAL_SERVER_ERROR, response.getStatusCode());
         verify(documentService).getAllDocuments();
     }
 
- */
+    @Test
+    void searchDocuments_success() {
+        // Arrange
+        String query = "test";
+        Document document = new Document();
+        document.setId("1");
+        document.setFilename("test.pdf");
+
+        byte[] fileContent = "Sample PDF content".getBytes();
+
+        DocumentWithFile doc = new DocumentWithFile(document, fileContent);
+
+        List<DocumentWithFile> results = List.of(doc);
+
+        when(documentService.searchDocuments(query)).thenReturn(results);
+
+        // Act
+        ResponseEntity<List<DocumentWithFile>> response = documentController.searchDocuments(query);
+
+        // Assert
+        assertEquals(OK, response.getStatusCode());
+        assertEquals(results, response.getBody());
+        verify(documentService).searchDocuments(query);
+    }
+
+    @Test
+    void searchDocuments_invalidQuery() {
+        // Act
+        ResponseEntity<List<DocumentWithFile>> response = documentController.searchDocuments("");
+
+        // Assert
+        assertEquals(BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void searchDocuments_internalServerError() {
+        // Arrange
+        String query = "test";
+        when(documentService.searchDocuments(query)).thenThrow(new RuntimeException("Unexpected error"));
+
+        // Act
+        ResponseEntity<List<DocumentWithFile>> response = documentController.searchDocuments(query);
+
+        // Assert
+        assertEquals(INTERNAL_SERVER_ERROR, response.getStatusCode());
+        verify(documentService).searchDocuments(query);
+    }
 }

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 public class ElasticsearchSearcher {
 
     @Autowired
-    private ElasticsearchClient elasticsearchClient;
+    ElasticsearchClient elasticsearchClient;
 
     public List<DocumentSearchResult> searchDocuments(String query) {
         try {
@@ -37,9 +38,10 @@ public class ElasticsearchSearcher {
 
             log.info("Elasticsearch returned {} results for query: {}", searchResponse.hits().hits().size(), query);
 
-            // Ergebnisse mappen
+            // Ergebnisse mappen und null-Quellen filtern
             return searchResponse.hits().hits().stream()
                     .map(Hit::source)
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
@@ -47,7 +49,6 @@ public class ElasticsearchSearcher {
             throw new RuntimeException("Failed to search documents", e);
         }
     }
-
 }
 
 

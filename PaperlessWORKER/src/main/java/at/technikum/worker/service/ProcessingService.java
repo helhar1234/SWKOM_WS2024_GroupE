@@ -37,7 +37,7 @@ public class ProcessingService {
         try {
             JSONObject jsonMessage = new JSONObject(message);
             String documentId = jsonMessage.getString("documentId");
-            //log.info("Processing OCR job for document ID: {}", documentId);
+            log.info("Processing OCR job for document ID: {}", documentId);
 
             // Fetch the document from MinIO
             log.info("Fetching document from MinIO for document ID: {}", documentId);
@@ -51,13 +51,13 @@ public class ProcessingService {
                 while ((bytesRead = documentStream.read(buffer)) != -1) {
                     fos.write(buffer, 0, bytesRead);
                 }
-                //log.info("File successfully downloaded to: {}", tempFile.getAbsolutePath());
+                log.info("File successfully downloaded to: {}", tempFile.getAbsolutePath());
             }
 
             // Perform OCR
             log.info("Starting OCR process for file: {}", tempFile.getName());
             String ocrText = ocrService.extractText(tempFile);
-            // log.info("OCR process completed for document ID: {}. Extracted text: {}"+ documentId+ ocrText);
+            log.info("OCR process completed for document ID: {}. Extracted text: {}"+ documentId+ ocrText);
 
             //Index Document for elastic
             elasticsearchService.indexDocument(documentId, ocrText);

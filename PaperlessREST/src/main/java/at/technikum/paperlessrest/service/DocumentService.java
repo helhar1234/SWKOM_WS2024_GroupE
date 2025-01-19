@@ -35,9 +35,9 @@ public class DocumentService {
         this.elasticsearchSearcher = elasticsearchSearcher;
     }
 
-    public Document uploadDocument(MultipartFile file) throws Exception {
+    public Document uploadFile(MultipartFile file) throws Exception {
         //log.info("Received file for upload: {}",file.getOriginalFilename());
-        if (!file.getContentType().equals("application/pdf")) {
+        if (!Objects.equals(file.getContentType(), "application/pdf")) {
             log.warn("Invalid file type for upload: {}", file.getContentType());
             throw new IllegalArgumentException("Only PDF files are allowed.");
         }
@@ -70,7 +70,7 @@ public class DocumentService {
                         .build()
         );
 
-        log.info("File successfully uploaded to MinIO with ID: {}" + id);
+        log.info("File successfully uploaded to MinIO with ID: {}", id);
         rabbitMQSender.sendOCRJobMessage(id);
         return document;
     }
@@ -142,17 +142,14 @@ public class DocumentService {
 
         // Elasticsearch-Ergebnisse zur Liste hinzufügen
         for (DocumentSearchResult result : elasticResults) {
-            Document document = documentRepository.findById(result.getDocumentId()).orElse(null);
-            if (document != null) {
-                allDocuments.add(document);
-            }
+            documentRepository.findById(result.getDocumentId()).ifPresent(allDocuments::add);
         }
 
         // Datenbank-Ergebnisse zur Liste hinzufügen (ohne Duplikate)
         allDocuments.addAll(
                 databaseMatches.stream()
                         .filter(doc -> allDocuments.stream().noneMatch(d -> d.getId().equals(doc.getId())))
-                        .collect(Collectors.toList())
+                        .toList()
         );
 
         // Zu DocumentWithFile mappen
@@ -170,6 +167,4 @@ public class DocumentService {
             }
         }).collect(Collectors.toList());
     }
-
-
 }
