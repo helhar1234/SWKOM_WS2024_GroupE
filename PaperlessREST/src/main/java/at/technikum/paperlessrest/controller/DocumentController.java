@@ -1,9 +1,7 @@
 package at.technikum.paperlessrest.controller;
 
-import at.technikum.paperlessrest.elastic.ElasticsearchConfig;
 import at.technikum.paperlessrest.elastic.ElasticsearchSearcher;
 import at.technikum.paperlessrest.entities.Document;
-import at.technikum.paperlessrest.entities.DocumentSearchResult;
 import at.technikum.paperlessrest.entities.DocumentWithFile;
 import at.technikum.paperlessrest.service.DocumentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,7 +24,7 @@ import java.util.List;
 public class DocumentController {
 
     private final DocumentService documentService;
-    private final ElasticsearchSearcher elasticsearchSearcher ;
+    private final ElasticsearchSearcher elasticsearchSearcher;
 
     public DocumentController(DocumentService documentService, ElasticsearchSearcher elasticsearchSearcher) {
         this.documentService = documentService;
@@ -42,7 +40,7 @@ public class DocumentController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Document> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            Document document = documentService.uploadDocument(file);
+            Document document = documentService.uploadFile(file);
             return ResponseEntity.status(201).body(document);
         } catch (IllegalArgumentException e) {
             log.error("Invalid file format: {}", e.getMessage());
