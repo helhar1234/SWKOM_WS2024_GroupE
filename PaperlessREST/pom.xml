@@ -95,6 +95,14 @@
             <artifactId>json</artifactId>
             <version>20241224</version>
         </dependency>
+
+        <!-- test database for integration test -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
