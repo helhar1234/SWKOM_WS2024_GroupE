@@ -71,7 +71,7 @@ public class DocumentService {
         );
 
         log.info("File successfully uploaded to MinIO with ID: {}", id);
-        rabbitMQSender.sendOCRJobMessage(id);
+        rabbitMQSender.sendOCRJobMessage(id, document.getFilename());
         return document;
     }
 
@@ -126,33 +126,16 @@ public class DocumentService {
     }
 
     public List<DocumentWithFile> searchDocuments(String query) {
-        // Elasticsearch-Suche
+        // Elasticsearch-Suche nach documentId und filename
         log.info("Querying Elasticsearch with query: {}", query);
         List<DocumentSearchResult> elasticResults = elasticsearchSearcher.searchDocuments(query);
 
-        // Datenbank-Suche nach Dateinamen und IDs
-        log.info("Querying database for filenames and IDs containing: {}", query);
-        List<Document> databaseMatches = new ArrayList<>();
-        databaseMatches.addAll(documentRepository.findByFilenameContainingIgnoreCase(query));
-        databaseMatches.addAll(documentRepository.findByIdContainingIgnoreCase(query));
+        // Ergebnisse zu Document-Objekten mappen
+        List<Document> allDocuments = elasticResults.stream()
+                .map(result -> new Document(result.getDocumentId(), result.getFilename()))
+                .collect(Collectors.toList());
 
-        // Ergebnisse zusammenführen
-        log.info("Merging Elasticsearch and database results");
-        List<Document> allDocuments = new ArrayList<>();
-
-        // Elasticsearch-Ergebnisse zur Liste hinzufügen
-        for (DocumentSearchResult result : elasticResults) {
-            documentRepository.findById(result.getDocumentId()).ifPresent(allDocuments::add);
-        }
-
-        // Datenbank-Ergebnisse zur Liste hinzufügen (ohne Duplikate)
-        allDocuments.addAll(
-                databaseMatches.stream()
-                        .filter(doc -> allDocuments.stream().noneMatch(d -> d.getId().equals(doc.getId())))
-                        .toList()
-        );
-
-        // Zu DocumentWithFile mappen
+        // Dateien abrufen und in DocumentWithFile-Objekte umwandeln
         log.info("Fetching file data for {} documents", allDocuments.size());
         return allDocuments.stream().map(document -> {
             try {
@@ -167,4 +150,5 @@ public class DocumentService {
             }
         }).collect(Collectors.toList());
     }
+
 }

@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class DocumentServiceTest {
-
     private final MinioClient minioClient = mock(MinioClient.class);
     private final DocumentRepository documentRepository = mock(DocumentRepository.class);
     private final RabbitMQSender rabbitMQSender = mock(RabbitMQSender.class);
@@ -50,7 +49,7 @@ class DocumentServiceTest {
                 .build();
 
         when(documentRepository.save(any(Document.class))).thenReturn(document);
-        doNothing().when(rabbitMQSender).sendOCRJobMessage(anyString());
+        doNothing().when(rabbitMQSender).sendOCRJobMessage(anyString(), anyString());
         // Statt `doNothing` hier `doAnswer` verwenden
         doAnswer(invocation -> null).when(minioClient).putObject(any(PutObjectArgs.class));
 
@@ -62,7 +61,7 @@ class DocumentServiceTest {
         assertEquals(file.getOriginalFilename(), result.getFilename());
         verify(documentRepository).save(any(Document.class));
         verify(minioClient).putObject(any(PutObjectArgs.class));
-        verify(rabbitMQSender).sendOCRJobMessage(result.getId());
+        verify(rabbitMQSender).sendOCRJobMessage(result.getId(), result.getFilename());
     }
 
     @Test
@@ -81,7 +80,7 @@ class DocumentServiceTest {
         assertEquals("Only PDF files are allowed.", exception.getMessage());
         verify(documentRepository, never()).save(any(Document.class));
         verify(minioClient, never()).putObject(any(PutObjectArgs.class));
-        verify(rabbitMQSender, never()).sendOCRJobMessage(anyString());
+        verify(rabbitMQSender, never()).sendOCRJobMessage(anyString(), anyString());
     }
 
     @Test
@@ -247,82 +246,28 @@ class DocumentServiceTest {
     }
 
     @Test
-    void searchDocuments_successWithResultsFromBoth() {
+    void searchDocuments_successWithResultsFromElasticsearch() {
         // Arrange
         String query = "test";
 
-        Document document1 = Document.builder().id("1").filename("test1.pdf").build();
-        Document document2 = Document.builder().id("2").filename("test2.pdf").build();
-
-        DocumentSearchResult elasticResult = new DocumentSearchResult("1", "Text", "timestamp");
-
+        DocumentSearchResult elasticResult = new DocumentSearchResult("1", "extracted text", "test1.pdf", "timestamp");
         when(elasticsearchSearcher.searchDocuments(query)).thenReturn(List.of(elasticResult));
-        when(documentRepository.findById("1")).thenReturn(Optional.of(document1));
-        when(documentRepository.findByFilenameContainingIgnoreCase(query)).thenReturn(List.of(document2));
-
-        // Act
-        List<DocumentWithFile> results = documentService.searchDocuments(query);
-
-        // Assert
-        assertEquals(2, results.size());
-        assertEquals(document1.getId(), results.get(0).getDocument().getId());
-        assertEquals(document2.getId(), results.get(1).getDocument().getId());
-        verify(elasticsearchSearcher).searchDocuments(query);
-        verify(documentRepository).findById("1");
-        verify(documentRepository).findByFilenameContainingIgnoreCase(query);
-    }
-
-    @Test
-    void searchDocuments_successWithOnlyElasticResults() {
-        // Arrange
-        String query = "elasticOnly";
-
-        Document document1 = Document.builder().id("1").filename("elastic1.pdf").build();
-
-        DocumentSearchResult elasticResult = new DocumentSearchResult("1", "Text", "timestamp");
-
-        when(elasticsearchSearcher.searchDocuments(query)).thenReturn(List.of(elasticResult));
-        when(documentRepository.findById("1")).thenReturn(Optional.of(document1));
-        when(documentRepository.findByFilenameContainingIgnoreCase(query)).thenReturn(Collections.emptyList());
 
         // Act
         List<DocumentWithFile> results = documentService.searchDocuments(query);
 
         // Assert
         assertEquals(1, results.size());
-        assertEquals(document1.getId(), results.get(0).getDocument().getId());
+        assertEquals(elasticResult.getDocumentId(), results.get(0).getDocument().getId());
         verify(elasticsearchSearcher).searchDocuments(query);
-        verify(documentRepository).findById("1");
-        verify(documentRepository).findByFilenameContainingIgnoreCase(query);
     }
 
     @Test
-    void searchDocuments_successWithOnlyDatabaseResults() {
+    void searchDocuments_noResultsFromElasticsearch() {
         // Arrange
-        String query = "dbOnly";
-
-        Document document2 = Document.builder().id("2").filename("db2.pdf").build();
+        String query = "unknown";
 
         when(elasticsearchSearcher.searchDocuments(query)).thenReturn(Collections.emptyList());
-        when(documentRepository.findByFilenameContainingIgnoreCase(query)).thenReturn(List.of(document2));
-
-        // Act
-        List<DocumentWithFile> results = documentService.searchDocuments(query);
-
-        // Assert
-        assertEquals(1, results.size());
-        assertEquals(document2.getId(), results.get(0).getDocument().getId());
-        verify(elasticsearchSearcher).searchDocuments(query);
-        verify(documentRepository).findByFilenameContainingIgnoreCase(query);
-    }
-
-    @Test
-    void searchDocuments_noResults() {
-        // Arrange
-        String query = "nonexistent";
-
-        when(elasticsearchSearcher.searchDocuments(query)).thenReturn(Collections.emptyList());
-        when(documentRepository.findByFilenameContainingIgnoreCase(query)).thenReturn(Collections.emptyList());
 
         // Act
         List<DocumentWithFile> results = documentService.searchDocuments(query);
@@ -331,69 +276,28 @@ class DocumentServiceTest {
         assertNotNull(results);
         assertTrue(results.isEmpty());
         verify(elasticsearchSearcher).searchDocuments(query);
-        verify(documentRepository).findByFilenameContainingIgnoreCase(query);
     }
 
     @Test
-    void searchDocuments_elasticAndDatabaseDuplicates() {
-        // Arrange
-        String query = "duplicate";
-
-        Document document1 = Document.builder().id("1").filename("duplicate.pdf").build();
-
-        DocumentSearchResult elasticResult = new DocumentSearchResult("1", "Text", "timestamp");
-
-        when(elasticsearchSearcher.searchDocuments(query)).thenReturn(List.of(elasticResult));
-        when(documentRepository.findById("1")).thenReturn(Optional.of(document1));
-        when(documentRepository.findByFilenameContainingIgnoreCase(query)).thenReturn(List.of(document1));
-
-        // Act
-        List<DocumentWithFile> results = documentService.searchDocuments(query);
-
-        // Assert
-        assertEquals(1, results.size());
-        assertEquals(document1.getId(), results.get(0).getDocument().getId());
-        verify(elasticsearchSearcher).searchDocuments(query);
-        verify(documentRepository).findById("1");
-        verify(documentRepository).findByFilenameContainingIgnoreCase(query);
-    }
-
-    @Test
-    void searchDocuments_elasticQueryFails() {
+    void searchDocuments_elasticSearchErrorHandling() {
         // Arrange
         String query = "error";
+
         when(elasticsearchSearcher.searchDocuments(query)).thenThrow(new RuntimeException("Elasticsearch error"));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> documentService.searchDocuments(query));
         assertEquals("Elasticsearch error", exception.getMessage());
         verify(elasticsearchSearcher).searchDocuments(query);
-        verify(documentRepository, never()).findByFilenameContainingIgnoreCase(anyString());
     }
 
     @Test
-    void searchDocuments_databaseQueryFails() {
-        // Arrange
-        String query = "dbError";
-        when(elasticsearchSearcher.searchDocuments(query)).thenReturn(Collections.emptyList());
-        when(documentRepository.findByFilenameContainingIgnoreCase(query)).thenThrow(new RuntimeException("Database error"));
-
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> documentService.searchDocuments(query));
-        assertEquals("Database error", exception.getMessage());
-        verify(elasticsearchSearcher).searchDocuments(query);
-        verify(documentRepository).findByFilenameContainingIgnoreCase(query);
-    }
-
-    @Test
-    void searchDocuments_minioFailsForFile() throws Exception {
+    void searchDocuments_minioFileRetrievalFailure() throws Exception {
         // Arrange
         String query = "minioFail";
+        DocumentSearchResult elasticResult = new DocumentSearchResult("1", "ocr extracted text", "doc1.pdf", "timestamp");
 
-        Document document1 = Document.builder().id("1").filename("doc1.pdf").build();
-
-        when(elasticsearchSearcher.searchDocuments(query)).thenReturn(Collections.emptyList());
-        when(documentRepository.findByFilenameContainingIgnoreCase(query)).thenReturn(List.of(document1));
+        when(elasticsearchSearcher.searchDocuments(query)).thenReturn(List.of(elasticResult));
         when(minioClient.getObject(any(GetObjectArgs.class))).thenThrow(new RuntimeException("MinIO error"));
 
         // Act
@@ -402,7 +306,8 @@ class DocumentServiceTest {
         // Assert
         assertEquals(1, results.size());
         assertNull(results.get(0).getFile());
-        verify(documentRepository).findByFilenameContainingIgnoreCase(query);
+        verify(elasticsearchSearcher).searchDocuments(query);
         verify(minioClient).getObject(any(GetObjectArgs.class));
     }
+
 }

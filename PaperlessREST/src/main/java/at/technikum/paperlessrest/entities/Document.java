@@ -24,4 +24,9 @@ public class Document {
     private String filetype;
     private LocalDateTime uploadDate;
     private boolean ocrJobDone;
+
+    public Document(String documentId, String filename) {
+        this.id = documentId;
+        this.filename = filename;
+    }
 }

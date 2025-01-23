@@ -37,6 +37,7 @@ public class ProcessingService {
         try {
             JSONObject jsonMessage = new JSONObject(message);
             String documentId = jsonMessage.getString("documentId");
+            String filename = jsonMessage.getString("filename");
             log.info("Processing OCR job for document ID: {}", documentId);
 
             // Fetch the document from MinIO
@@ -60,7 +61,7 @@ public class ProcessingService {
             log.info("OCR process completed for document ID: {}. Extracted text: {}"+ documentId+ ocrText);
 
             //Index Document for elastic
-            elasticsearchService.indexDocument(documentId, ocrText);
+            elasticsearchService.indexDocument(documentId, filename, ocrText);
 
             // Send result to result_queue
             log.info("Sending OCR result to result queue for document ID: {}", documentId);

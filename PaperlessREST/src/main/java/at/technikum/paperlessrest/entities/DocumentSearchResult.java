@@ -11,7 +11,9 @@ import lombok.NoArgsConstructor;
 public class DocumentSearchResult {
     private String documentId;
     private String ocrText;
+    private String filename;
 
     @JsonProperty("@timestamp") // Mappt das Elasticsearch-Feld "@timestamp" auf "timestamp"
     private String timestamp;
+
 }

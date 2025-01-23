@@ -30,7 +30,7 @@ class ElasticsearchSearcherTest {
         // Arrange
         String query = "test";
 
-        DocumentSearchResult documentSearchResult = new DocumentSearchResult("1", "text", "timestamp");
+        DocumentSearchResult documentSearchResult = new DocumentSearchResult("1", "text", "filename", "timestamp");
         Hit<DocumentSearchResult> hit = Hit.of(h -> h
                 .id("id")
                 .index("documents")

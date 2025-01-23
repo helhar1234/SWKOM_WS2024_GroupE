@@ -22,13 +22,14 @@ public class ElasticsearchSearcher {
 
     public List<DocumentSearchResult> searchDocuments(String query) {
         try {
-            // Elasticsearch-Suchanfrage erstellen
+            // Elasticsearch-Suchanfrage erstellen, die nach ocrText, filename und documentId sucht
             SearchRequest searchRequest = SearchRequest.of(s -> s
                     .index("documents")
                     .query(q -> q
-                            .match(m -> m
-                                    .field("ocrText") // Nach OCR-Text suchen
-                                    .query(query)
+                            .bool(b -> b
+                                    .should(s1 -> s1.match(m -> m.field("ocrText").query(query)))  // Suche im OCR-Text
+                                    .should(s2 -> s2.wildcard(w -> w.field("filename").value("*" + query + "*"))) // Wildcard-Suche für Teilstring im filename
+                                    .should(s3 -> s3.match(m -> m.field("documentId").query(query))) // Suche in der Dokument-ID
                             )
                     )
             );
@@ -49,6 +50,7 @@ public class ElasticsearchSearcher {
             throw new RuntimeException("Failed to search documents", e);
         }
     }
+
 }
 
 

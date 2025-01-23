@@ -17,10 +17,11 @@ public class ElasticsearchService {
     @Autowired
     private ElasticsearchClient elasticsearchClient;
 
-    public String indexDocument(String documentId, String ocrText) throws IOException {
+    public String indexDocument(String documentId, String filename, String ocrText) throws IOException {
         // Create the document content (JSON format)
         Map<String, Object> jsonMap = new HashMap<>();
         jsonMap.put("documentId", documentId);
+        jsonMap.put("filename", filename);
         jsonMap.put("ocrText", ocrText);
         jsonMap.put("@timestamp", Instant.now().toString()); // Add the @timestamp field
 

@@ -14,8 +14,8 @@ public class RabbitMQSender {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public void sendOCRJobMessage(String documentId) {
-        String message = "{\"documentId\":\"" + documentId + "\"}";
+    public void sendOCRJobMessage(String documentId, String filename) {
+        String message = "{\"documentId\":\"" + documentId + "\", \"filename\":\"" + filename + "\"}";
         log.info("Preparing to send OCR job message for document ID: {}", documentId);
 
         try {

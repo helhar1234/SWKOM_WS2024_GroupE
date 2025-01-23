@@ -16,10 +16,11 @@ class RabbitMQSenderTest {
     void sendOCRJobMessage_success() {
         // Arrange
         String documentId = "123e4567-e89b-12d3-a456-426614174000";
-        String expectedMessage = "{\"documentId\":\"" + documentId + "\"}";
+        String filename = "filename-test";
+        String expectedMessage = "{\"documentId\":\"" + documentId + "\", \"filename\":\"" + filename + "\"}";
 
         // Act
-        rabbitMQSender.sendOCRJobMessage(documentId);
+        rabbitMQSender.sendOCRJobMessage(documentId, filename);
 
         // Assert
         ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
@@ -37,13 +38,14 @@ class RabbitMQSenderTest {
     void sendOCRJobMessage_failure() {
         // Arrange
         String documentId = "123e4567-e89b-12d3-a456-426614174000";
-        String expectedMessage = "{\"documentId\":\"" + documentId + "\"}";
+        String filename = "filename-test";
+        String expectedMessage = "{\"documentId\":\"" + documentId + "\", \"filename\":\"" + filename + "\"}";
 
         doThrow(new RuntimeException("RabbitMQ error")).when(rabbitTemplate)
                 .convertAndSend(RabbitMQConfig.EXCHANGE, RabbitMQConfig.ROUTING_KEY, expectedMessage);
 
         // Act
-        rabbitMQSender.sendOCRJobMessage(documentId);
+        rabbitMQSender.sendOCRJobMessage(documentId, filename);
 
         // Assert
         verify(rabbitTemplate).convertAndSend(RabbitMQConfig.EXCHANGE, RabbitMQConfig.ROUTING_KEY, expectedMessage);
