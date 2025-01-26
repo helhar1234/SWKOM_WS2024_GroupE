@@ -1,6 +1,6 @@
 package at.technikum.paperlessrest.elastic;
 
-import at.technikum.paperlessrest.entities.DocumentSearchResult;
+import at.technikum.paperlessrest.dto.DocumentSearchResultDTO;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -30,28 +30,28 @@ class ElasticsearchSearcherTest {
         // Arrange
         String query = "test";
 
-        DocumentSearchResult documentSearchResult = new DocumentSearchResult("1", "text", "filename", "timestamp");
-        Hit<DocumentSearchResult> hit = Hit.of(h -> h
+        DocumentSearchResultDTO documentSearchResult = new DocumentSearchResultDTO("1", "text", "filename", "filetype", 1, true, null, "timestamp");
+        Hit<DocumentSearchResultDTO> hit = Hit.of(h -> h
                 .id("id")
                 .index("documents")
                 .source(documentSearchResult)
         );
 
-        HitsMetadata<DocumentSearchResult> hitsMetadata = mock(HitsMetadata.class);
+        HitsMetadata<DocumentSearchResultDTO> hitsMetadata = mock(HitsMetadata.class);
         when(hitsMetadata.hits()).thenReturn(List.of(hit));
 
-        SearchResponse<DocumentSearchResult> searchResponse = mock(SearchResponse.class);
+        SearchResponse<DocumentSearchResultDTO> searchResponse = mock(SearchResponse.class);
         when(searchResponse.hits()).thenReturn(hitsMetadata);
 
-        when(elasticsearchClient.search(any(SearchRequest.class), eq(DocumentSearchResult.class))).thenReturn(searchResponse);
+        when(elasticsearchClient.search(any(SearchRequest.class), eq(DocumentSearchResultDTO.class))).thenReturn(searchResponse);
 
         // Act
-        List<DocumentSearchResult> results = elasticsearchSearcher.searchDocuments(query);
+        List<DocumentSearchResultDTO> results = elasticsearchSearcher.searchDocuments(query);
 
         // Assert
         assertEquals(1, results.size());
         assertEquals("1", results.get(0).getDocumentId());
-        verify(elasticsearchClient).search(any(SearchRequest.class), eq(DocumentSearchResult.class));
+        verify(elasticsearchClient).search(any(SearchRequest.class), eq(DocumentSearchResultDTO.class));
     }
 
     @Test
@@ -59,21 +59,21 @@ class ElasticsearchSearcherTest {
         // Arrange
         String query = "empty";
 
-        HitsMetadata<DocumentSearchResult> hitsMetadata = mock(HitsMetadata.class);
+        HitsMetadata<DocumentSearchResultDTO> hitsMetadata = mock(HitsMetadata.class);
         when(hitsMetadata.hits()).thenReturn(Collections.emptyList());
 
-        SearchResponse<DocumentSearchResult> searchResponse = mock(SearchResponse.class);
+        SearchResponse<DocumentSearchResultDTO> searchResponse = mock(SearchResponse.class);
         when(searchResponse.hits()).thenReturn(hitsMetadata);
 
-        when(elasticsearchClient.search(any(SearchRequest.class), eq(DocumentSearchResult.class))).thenReturn(searchResponse);
+        when(elasticsearchClient.search(any(SearchRequest.class), eq(DocumentSearchResultDTO.class))).thenReturn(searchResponse);
 
         // Act
-        List<DocumentSearchResult> results = elasticsearchSearcher.searchDocuments(query);
+        List<DocumentSearchResultDTO> results = elasticsearchSearcher.searchDocuments(query);
 
         // Assert
         assertNotNull(results);
         assertTrue(results.isEmpty());
-        verify(elasticsearchClient).search(any(SearchRequest.class), eq(DocumentSearchResult.class));
+        verify(elasticsearchClient).search(any(SearchRequest.class), eq(DocumentSearchResultDTO.class));
     }
 
     @Test
@@ -81,13 +81,13 @@ class ElasticsearchSearcherTest {
         // Arrange
         String query = "error";
 
-        when(elasticsearchClient.search(any(SearchRequest.class), eq(DocumentSearchResult.class)))
+        when(elasticsearchClient.search(any(SearchRequest.class), eq(DocumentSearchResultDTO.class)))
                 .thenThrow(new RuntimeException("Elasticsearch failure"));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> elasticsearchSearcher.searchDocuments(query));
         assertEquals("Failed to search documents", exception.getMessage());
-        verify(elasticsearchClient).search(any(SearchRequest.class), eq(DocumentSearchResult.class));
+        verify(elasticsearchClient).search(any(SearchRequest.class), eq(DocumentSearchResultDTO.class));
     }
 
     @Test
@@ -95,26 +95,26 @@ class ElasticsearchSearcherTest {
         // Arrange
         String query = "nullSource";
 
-        Hit<DocumentSearchResult> hit = Hit.of(h -> h
+        Hit<DocumentSearchResultDTO> hit = Hit.of(h -> h
                 .id("id")
                 .index("documents")
                 .source(null) // Quelle ist null
         );
 
-        HitsMetadata<DocumentSearchResult> hitsMetadata = mock(HitsMetadata.class);
+        HitsMetadata<DocumentSearchResultDTO> hitsMetadata = mock(HitsMetadata.class);
         when(hitsMetadata.hits()).thenReturn(List.of(hit));
 
-        SearchResponse<DocumentSearchResult> searchResponse = mock(SearchResponse.class);
+        SearchResponse<DocumentSearchResultDTO> searchResponse = mock(SearchResponse.class);
         when(searchResponse.hits()).thenReturn(hitsMetadata);
 
-        when(elasticsearchClient.search(any(SearchRequest.class), eq(DocumentSearchResult.class))).thenReturn(searchResponse);
+        when(elasticsearchClient.search(any(SearchRequest.class), eq(DocumentSearchResultDTO.class))).thenReturn(searchResponse);
 
         // Act
-        List<DocumentSearchResult> results = elasticsearchSearcher.searchDocuments(query);
+        List<DocumentSearchResultDTO> results = elasticsearchSearcher.searchDocuments(query);
 
         // Assert
         assertNotNull(results);
         assertTrue(results.isEmpty());
-        verify(elasticsearchClient).search(any(SearchRequest.class), eq(DocumentSearchResult.class));
+        verify(elasticsearchClient).search(any(SearchRequest.class), eq(DocumentSearchResultDTO.class));
     }
 }

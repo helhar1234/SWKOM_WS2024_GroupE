@@ -1,22 +1,15 @@
-package at.technikum.paperlessrest.entities;
+package at.technikum.paperlessrest.dto;
 
-import at.technikum.paperlessrest.dto.DocumentDTO;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "files")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class Document {
-
-    @Id
+@Setter
+@Getter
+@Builder
+public class DocumentWithFileDTO {
     private String id;
 
     private String filename;
@@ -26,17 +19,23 @@ public class Document {
     private boolean ocrJobDone;
     private byte[] file;
 
-    public Document(String documentId, String filename) {
-        this.id = documentId;
+    public DocumentWithFileDTO(String id, String filename, long filesize, String filetype, LocalDateTime uploadDate, boolean ocrJobDone, byte[] file) {
+        this.id = id;
         this.filename = filename;
+        this.filesize = filesize;
+        this.filetype = filetype;
+        this.uploadDate = uploadDate;
+        this.ocrJobDone = ocrJobDone;
+        this.file = file;
     }
 
-    public Document(DocumentDTO documentDTO) {
+    public DocumentWithFileDTO(DocumentDTO documentDTO, byte[] file) {
         this.id = documentDTO.getId();
         this.filename = documentDTO.getFilename();
         this.filesize = documentDTO.getFilesize();
         this.filetype = documentDTO.getFiletype();
         this.uploadDate = documentDTO.getUploadDate();
         this.ocrJobDone = documentDTO.isOcrJobDone();
+        this.file = file;
     }
 }
