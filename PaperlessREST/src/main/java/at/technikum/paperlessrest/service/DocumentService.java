@@ -115,11 +115,18 @@ public class DocumentService {
                 .orElseThrow(() -> new IllegalArgumentException("Document not found with ID: " + id));
     }
 
-    public List<DocumentWithFileDTO> getAllDocuments() {
+    public List<DocumentDTO> getAllDocuments() {
         log.info("Fetching all documents.");
         return documentRepository.findAll()
                 .stream()
-                .map(document -> new DocumentWithFileDTO(document.getId(), document.getFilename(), document.getFilesize(), document.getFiletype(), document.getUploadDate(), document.isOcrJobDone(), document.getFile()))
+                .filter(Objects::nonNull) // Entferne `null`-Einträge
+                .map(document -> new DocumentDTO(
+                        document.getId(),
+                        document.getFilename(),
+                        document.getFilesize(),
+                        document.getFiletype(),
+                        document.getUploadDate(),
+                        document.isOcrJobDone()))
                 .collect(Collectors.toList());
     }
 

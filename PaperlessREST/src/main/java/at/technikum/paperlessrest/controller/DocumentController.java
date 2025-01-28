@@ -107,9 +107,10 @@ public class DocumentController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping
-    public ResponseEntity<List<DocumentWithFileDTO>> getAllDocuments() {
+    public ResponseEntity<List<DocumentDTO>> getAllDocuments() {
         try {
-            List<DocumentWithFileDTO> documents = documentService.getAllDocuments();
+            List<DocumentDTO> documents = documentService.getAllDocuments();
+            log.error("Found {} documents", documents.size());
             return ResponseEntity.ok(documents);
         } catch (Exception e) {
             log.error("Error retrieving documents: {}", e.getMessage(), e);

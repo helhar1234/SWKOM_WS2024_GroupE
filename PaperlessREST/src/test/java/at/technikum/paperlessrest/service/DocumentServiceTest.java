@@ -30,7 +30,7 @@ class DocumentServiceTest {
     private final ElasticsearchSearcher elasticsearchSearcher = mock(ElasticsearchSearcher.class);
     private final DocumentService documentService = new DocumentService(minioClient, documentRepository, rabbitMQSender, elasticsearchSearcher);
 
-    /*@Test
+    @Test
     void uploadFile_success() throws Exception {
         // Arrange
         MockMultipartFile file = new MockMultipartFile(
@@ -49,7 +49,7 @@ class DocumentServiceTest {
                 .ocrJobDone(false)
                 .build();
 
-        when(documentRepository.save(any(DocumentDTO.class))).thenReturn(document);
+        when(documentRepository.save(any(Document.class))).thenReturn(new Document(document));
         doNothing().when(rabbitMQSender).sendOCRJobMessage(anyString(), anyString());
         doAnswer(invocation -> null).when(minioClient).putObject(any(PutObjectArgs.class));
 
@@ -62,7 +62,7 @@ class DocumentServiceTest {
         verify(documentRepository).save(any(Document.class));
         verify(minioClient).putObject(any(PutObjectArgs.class));
         verify(rabbitMQSender).sendOCRJobMessage(result.getId(), result.getFilename());
-    }*/
+    }
 
     @Test
     void uploadFile_invalidFileType() throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
@@ -198,37 +198,23 @@ class DocumentServiceTest {
         verify(minioClient).getObject(any(GetObjectArgs.class));
     }
 
-    /*@Test
+    @Test
     void getAllDocuments_success() throws Exception {
         // Arrange
         DocumentDTO document1 = DocumentDTO.builder().id("1").filename("doc1.pdf").build();
         DocumentDTO document2 = DocumentDTO.builder().id("2").filename("doc2.pdf").build();
 
-        byte[] fileContent1 = "Content 1".getBytes();
-        byte[] fileContent2 = "Content 2".getBytes();
-
-        GetObjectResponse response1 = mock(GetObjectResponse.class);
-        GetObjectResponse response2 = mock(GetObjectResponse.class);
-
-        when(response1.readAllBytes()).thenReturn(fileContent1);
-        when(response2.readAllBytes()).thenReturn(fileContent2);
-
-        when(documentRepository.findAll()).thenReturn(List.of(document1, document2));
-
-        when(minioClient.getObject(any(GetObjectArgs.class)))
-                .thenReturn(response1)
-                .thenReturn(response2);
+        when(documentRepository.findAll()).thenReturn(List.of(new Document(document1), new Document(document2)));
 
         // Act
-        List<DocumentWithFileDTO> result = documentService.getAllDocuments();
+        List<DocumentDTO> result = documentService.getAllDocuments();
 
         // Assert
         assertEquals(2, result.size());
-        assertArrayEquals(fileContent1, result.get(0).getFile());
-        assertArrayEquals(fileContent2, result.get(1).getFile());
         verify(documentRepository).findAll();
-        verify(minioClient, times(2)).getObject(any(GetObjectArgs.class));
-    }*/
+        assertEquals(document1.getId(), result.get(0).getId());
+        assertEquals(document2.getId(), result.get(1).getId());
+    }
 
     @Test
     void getAllDocuments_noDocumentsFound() throws Exception {
@@ -236,7 +222,7 @@ class DocumentServiceTest {
         when(documentRepository.findAll()).thenReturn(Collections.emptyList());
 
         // Act
-        List<DocumentWithFileDTO> result = documentService.getAllDocuments();
+        List<DocumentDTO> result = documentService.getAllDocuments();
 
         // Assert
         assertNotNull(result);

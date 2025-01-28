@@ -199,23 +199,16 @@ class DocumentControllerTest {
         document1.setId("1");
         document1.setFilename("doc1.pdf");
 
-        byte[] fileContent1 = "Content 1".getBytes();
-
         DocumentDTO document2 = new DocumentDTO();
         document2.setId("2");
         document2.setFilename("doc2.pdf");
 
-        byte[] fileContent2 = "Content 2".getBytes();
-
-        DocumentWithFileDTO doc1 = new DocumentWithFileDTO(document1, fileContent1);
-        DocumentWithFileDTO doc2 = new DocumentWithFileDTO(document2, fileContent2);
-
-        List<DocumentWithFileDTO> documents = List.of(doc1, doc2);
+        List<DocumentDTO> documents = List.of(document1, document2);
 
         when(documentService.getAllDocuments()).thenReturn(documents);
 
         // Act
-        ResponseEntity<List<DocumentWithFileDTO>> response = documentController.getAllDocuments();
+        ResponseEntity<List<DocumentDTO>> response = documentController.getAllDocuments();
 
         // Assert
         assertEquals(OK, response.getStatusCode());
@@ -229,7 +222,7 @@ class DocumentControllerTest {
         when(documentService.getAllDocuments()).thenThrow(new RuntimeException("Unexpected error"));
 
         // Act
-        ResponseEntity<List<DocumentWithFileDTO>> response = documentController.getAllDocuments();
+        ResponseEntity<List<DocumentDTO>> response = documentController.getAllDocuments();
 
         // Assert
         assertEquals(INTERNAL_SERVER_ERROR, response.getStatusCode());

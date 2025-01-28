@@ -16,7 +16,7 @@ class RabbitMQResultListenerTest {
     private final DocumentRepository documentRepository = mock(DocumentRepository.class);
     private final RabbitMQResultListener rabbitMQResultListener = new RabbitMQResultListener(documentRepository);
 
-    /*@Test
+    @Test
     void handleOcrResult_success() throws JSONException {
         // Arrange
         String documentId = "123e4567-e89b-12d3-a456-426614174000";
@@ -30,8 +30,8 @@ class RabbitMQResultListenerTest {
                 .put("documentId", documentId)
                 .toString();
 
-        when(documentRepository.findById(documentId)).thenReturn(java.util.Optional.of(document));
-        when(documentRepository.save(any(Document.class))).thenReturn(document);
+        when(documentRepository.findById(documentId)).thenReturn(java.util.Optional.of(new Document(document)));
+        when(documentRepository.save(any(Document.class))).thenReturn(new Document(document));
 
         // Act
         rabbitMQResultListener.handleOcrResult(message);
@@ -43,7 +43,7 @@ class RabbitMQResultListenerTest {
         Document savedDocument = documentCaptor.getValue();
         assertTrue(savedDocument.isOcrJobDone());
         verify(documentRepository).findById(documentId);
-    }*/
+    }
 
     @Test
     void handleOcrResult_documentNotFound() throws JSONException {

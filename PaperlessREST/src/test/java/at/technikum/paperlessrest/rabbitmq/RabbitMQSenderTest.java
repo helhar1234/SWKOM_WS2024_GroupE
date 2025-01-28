@@ -49,6 +49,5 @@ class RabbitMQSenderTest {
 
         // Assert
         verify(rabbitTemplate).convertAndSend(RabbitMQConfig.EXCHANGE, RabbitMQConfig.ROUTING_KEY, expectedMessage);
-        // Der Fehler wird im Log protokolliert, aber nicht weitergegeben.
     }
 }

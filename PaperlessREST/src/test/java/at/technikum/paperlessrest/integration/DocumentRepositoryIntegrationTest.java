@@ -22,7 +22,7 @@ class DocumentRepositoryIntegrationTest {
     static void setLogPathForTests() {
         System.setProperty("LOG_PATH", "./logs/test-logs");
     }
-/*
+
     @Test
     void testSaveAndFindById() {
         // Arrange
@@ -31,12 +31,13 @@ class DocumentRepositoryIntegrationTest {
                 .filename("test.pdf")
                 .filesize(123L)
                 .build();
-        documentRepository.save(document);
+
+        documentRepository.save(new Document(document));
 
         // Act
         Optional<Document> result = documentRepository.findById("1");
 
         // Assert
         assertTrue(result.isPresent());
-    }*/
+    }
 }
