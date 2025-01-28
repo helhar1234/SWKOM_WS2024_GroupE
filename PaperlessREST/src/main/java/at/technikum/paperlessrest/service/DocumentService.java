@@ -130,40 +130,45 @@ public class DocumentService {
                 .collect(Collectors.toList());
     }
 
-    public List<DocumentWithFileDTO> searchDocuments(String query) {
+    public List<DocumentDTO> searchDocuments(String query) {
         log.info("Querying Elasticsearch with query: {}", query);
+
+        // Elasticsearch-Suche durchführen
         List<DocumentSearchResultDTO> elasticResults = elasticsearchSearcher.searchDocuments(query);
 
-        log.info("Mapping search results to DTOs.");
+        log.info("Mapping Elasticsearch results to DTOs using database data.");
+
+        // Dokumentinformationen aus der Datenbank abrufen und zu DTOs mappen
         return elasticResults.stream()
                 .map(result -> {
                     try {
-                        byte[] file = minioClient.getObject(GetObjectArgs.builder()
-                                .bucket(bucketName)
-                                .object(result.getDocumentId())
-                                .build()).readAllBytes();
-                        return new DocumentWithFileDTO(
-                                result.getDocumentId(),
-                                result.getFilename(),
-                                result.getFilesize(),
-                                result.getFiletype(),
-                                result.getUploadDate(),
-                                result.isOcrJobDone(),
-                                file
+                        // Hole das Dokument aus der Datenbank
+                        Document document = documentRepository.findById(result.getDocumentId())
+                                .orElseThrow(() -> new RuntimeException("Document not found in database for ID: " + result.getDocumentId()));
+
+                        // Mappe die Datenbankdaten zu einem DocumentDTO
+                        return new DocumentDTO(
+                                document.getId(),
+                                document.getFilename(),
+                                document.getFilesize(),
+                                document.getFiletype(),
+                                document.getUploadDate(),
+                                document.isOcrJobDone()
                         );
                     } catch (Exception e) {
-                        log.error("Error fetching file for document ID {}: {}", result.getDocumentId(), e.getMessage(), e);
-                        return new DocumentWithFileDTO(
+                        log.error("Error fetching document data for ID {}: {}", result.getDocumentId(), e.getMessage(), e);
+                        // Falls ein Fehler auftritt, ein leeres DTO zurückgeben oder andere Behandlung
+                        return new DocumentDTO(
                                 result.getDocumentId(),
                                 result.getFilename(),
                                 result.getFilesize(),
                                 result.getFiletype(),
                                 result.getUploadDate(),
-                                result.isOcrJobDone(),
-                                null
+                                result.isOcrJobDone()
                         );
                     }
                 })
                 .collect(Collectors.toList());
     }
+
 }

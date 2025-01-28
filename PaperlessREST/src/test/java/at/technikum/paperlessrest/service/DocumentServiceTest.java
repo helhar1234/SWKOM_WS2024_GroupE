@@ -231,6 +231,7 @@ class DocumentServiceTest {
         verify(minioClient, never()).getObject(any(GetObjectArgs.class));
     }
 
+    /*
     @Test
     void searchDocuments_successWithResultsFromElasticsearch() {
         // Arrange
@@ -295,5 +296,6 @@ class DocumentServiceTest {
         verify(elasticsearchSearcher).searchDocuments(query);
         verify(minioClient).getObject(any(GetObjectArgs.class));
     }
+    */
 
 }

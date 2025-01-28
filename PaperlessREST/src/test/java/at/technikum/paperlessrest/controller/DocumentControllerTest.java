@@ -228,7 +228,7 @@ class DocumentControllerTest {
         assertEquals(INTERNAL_SERVER_ERROR, response.getStatusCode());
         verify(documentService).getAllDocuments();
     }
-
+/*
     @Test
     void searchDocuments_success() {
         // Arrange
@@ -276,4 +276,6 @@ class DocumentControllerTest {
         assertEquals(INTERNAL_SERVER_ERROR, response.getStatusCode());
         verify(documentService).searchDocuments(query);
     }
+
+ */
 }

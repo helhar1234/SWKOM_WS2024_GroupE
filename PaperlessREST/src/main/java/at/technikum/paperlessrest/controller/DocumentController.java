@@ -103,7 +103,7 @@ public class DocumentController {
 
     @Operation(summary = "Fetches all documents")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Documents retrieved successfully", content = @Content(schema = @Schema(implementation = DocumentWithFileDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Documents retrieved successfully", content = @Content(schema = @Schema(implementation = DocumentDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping
@@ -126,7 +126,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/search")
-    public ResponseEntity<List<DocumentWithFileDTO>> searchDocuments(@RequestParam String query) {
+    public ResponseEntity<List<DocumentDTO>> searchDocuments(@RequestParam String query) {
         try {
             if (query == null || query.trim().isEmpty()) {
                 log.error("Invalid query parameter: query cannot be null or empty");
@@ -134,7 +134,7 @@ public class DocumentController {
             }
 
             log.info("Searching documents with query: {}", query);
-            List<DocumentWithFileDTO> results = documentService.searchDocuments(query);
+            List<DocumentDTO> results = documentService.searchDocuments(query);
             return ResponseEntity.ok(results);
 
         } catch (Exception e) {
