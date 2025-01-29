@@ -32,7 +32,7 @@ public class ProcessingService {
 
     @RabbitListener(queues = RabbitMQConfig.PROCESSING_QUEUE)
     public void processOcrJob(String message) {
-        //log.info("Received message from processing queue: {}", message);
+        log.info("Received message from processing queue: {}", message);
 
         try {
             JSONObject jsonMessage = new JSONObject(message);

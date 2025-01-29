@@ -49,7 +49,6 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch("http://localhost:8081/api/documents");
       if (!response.ok) throw new Error("Failed to fetch documents.");
-      //console.log(documents);
       const documents = await response.json();
       renderTable(documents);
     } catch (error) {

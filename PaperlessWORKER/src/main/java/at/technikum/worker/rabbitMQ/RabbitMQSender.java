@@ -1,7 +1,6 @@
 package at.technikum.worker.rabbitMQ;
 
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONObject;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,11 +23,11 @@ public class RabbitMQSender {
 
     public void sendToProcessingQueue(String documentId) {
         String jsonMessage = String.format("{\"documentId\": \"%s\"}"+ documentId);
-        //log.info("Preparing to send message to processing queue: {}", jsonMessage);
+        log.info("Preparing to send message to processing queue: {}", jsonMessage);
 
         try {
             rabbitTemplate.convertAndSend(processingQueue, jsonMessage);
-            //log.info("Message successfully sent to processing queue: {}", jsonMessage);
+            log.info("Message successfully sent to processing queue: {}", jsonMessage);
         } catch (Exception e) {
             log.error("Failed to send message to processing queue: {}", jsonMessage, e);
         }

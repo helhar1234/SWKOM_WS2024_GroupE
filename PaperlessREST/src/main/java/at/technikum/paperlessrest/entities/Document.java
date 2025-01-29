@@ -3,7 +3,6 @@ package at.technikum.paperlessrest.entities;
 import at.technikum.paperlessrest.dto.DocumentDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

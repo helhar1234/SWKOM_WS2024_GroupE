@@ -2,7 +2,6 @@ package at.technikum.paperlessrest.service;
 
 import at.technikum.paperlessrest.dto.DocumentDTO;
 import at.technikum.paperlessrest.dto.DocumentSearchResultDTO;
-import at.technikum.paperlessrest.dto.DocumentWithFileDTO;
 import at.technikum.paperlessrest.elastic.ElasticsearchSearcher;
 import at.technikum.paperlessrest.entities.Document;
 import at.technikum.paperlessrest.rabbitmq.RabbitMQSender;
