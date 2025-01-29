@@ -2,7 +2,6 @@ package at.technikum.paperlessrest.service;
 
 import at.technikum.paperlessrest.dto.DocumentDTO;
 import at.technikum.paperlessrest.dto.DocumentSearchResultDTO;
-import at.technikum.paperlessrest.dto.DocumentWithFileDTO;
 import at.technikum.paperlessrest.elastic.ElasticsearchSearcher;
 import at.technikum.paperlessrest.entities.Document;
 import at.technikum.paperlessrest.rabbitmq.RabbitMQSender;
@@ -199,7 +198,7 @@ class DocumentServiceTest {
     }
 
     @Test
-    void getAllDocuments_success() throws Exception {
+    void getAllDocuments_success() {
         // Arrange
         DocumentDTO document1 = DocumentDTO.builder().id("1").filename("doc1.pdf").build();
         DocumentDTO document2 = DocumentDTO.builder().id("2").filename("doc2.pdf").build();
@@ -231,7 +230,6 @@ class DocumentServiceTest {
         verify(minioClient, never()).getObject(any(GetObjectArgs.class));
     }
 
-    /*
     @Test
     void searchDocuments_successWithResultsFromElasticsearch() {
         // Arrange
@@ -241,7 +239,7 @@ class DocumentServiceTest {
         when(elasticsearchSearcher.searchDocuments(query)).thenReturn(List.of(elasticResult));
 
         // Act
-        List<DocumentWithFileDTO> results = documentService.searchDocuments(query);
+        List<DocumentDTO> results = documentService.searchDocuments(query);
 
         // Assert
         assertEquals(1, results.size());
@@ -257,7 +255,7 @@ class DocumentServiceTest {
         when(elasticsearchSearcher.searchDocuments(query)).thenReturn(Collections.emptyList());
 
         // Act
-        List<DocumentWithFileDTO> results = documentService.searchDocuments(query);
+        List<DocumentDTO> results = documentService.searchDocuments(query);
 
         // Assert
         assertNotNull(results);
@@ -277,25 +275,4 @@ class DocumentServiceTest {
         assertEquals("Elasticsearch error", exception.getMessage());
         verify(elasticsearchSearcher).searchDocuments(query);
     }
-
-    @Test
-    void searchDocuments_minioFileRetrievalFailure() throws Exception {
-        // Arrange
-        String query = "minioFail";
-        DocumentSearchResultDTO elasticResult = new DocumentSearchResultDTO("1", "text", "filename", "filetype", 1, true, null, "timestamp");
-
-        when(elasticsearchSearcher.searchDocuments(query)).thenReturn(List.of(elasticResult));
-        when(minioClient.getObject(any(GetObjectArgs.class))).thenThrow(new RuntimeException("MinIO error"));
-
-        // Act
-        List<DocumentWithFileDTO> results = documentService.searchDocuments(query);
-
-        // Assert
-        assertEquals(1, results.size());
-        assertNull(results.get(0).getFile());
-        verify(elasticsearchSearcher).searchDocuments(query);
-        verify(minioClient).getObject(any(GetObjectArgs.class));
-    }
-    */
-
 }

@@ -1,8 +1,6 @@
 package at.technikum.paperlessrest.controller;
 
 import at.technikum.paperlessrest.dto.DocumentDTO;
-import at.technikum.paperlessrest.dto.DocumentWithFileDTO;
-import at.technikum.paperlessrest.entities.Document;
 import at.technikum.paperlessrest.service.DocumentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
@@ -228,7 +226,7 @@ class DocumentControllerTest {
         assertEquals(INTERNAL_SERVER_ERROR, response.getStatusCode());
         verify(documentService).getAllDocuments();
     }
-/*
+
     @Test
     void searchDocuments_success() {
         // Arrange
@@ -237,16 +235,12 @@ class DocumentControllerTest {
         document.setId("1");
         document.setFilename("test.pdf");
 
-        byte[] fileContent = "Sample PDF content".getBytes();
-
-        DocumentWithFileDTO doc = new DocumentWithFileDTO(document, fileContent);
-
-        List<DocumentWithFileDTO> results = List.of(doc);
+        List<DocumentDTO> results = List.of(document);
 
         when(documentService.searchDocuments(query)).thenReturn(results);
 
         // Act
-        ResponseEntity<List<DocumentWithFileDTO>> response = documentController.searchDocuments(query);
+        ResponseEntity<List<DocumentDTO>> response = documentController.searchDocuments(query);
 
         // Assert
         assertEquals(OK, response.getStatusCode());
@@ -257,7 +251,7 @@ class DocumentControllerTest {
     @Test
     void searchDocuments_invalidQuery() {
         // Act
-        ResponseEntity<List<DocumentWithFileDTO>> response = documentController.searchDocuments("");
+        ResponseEntity<List<DocumentDTO>> response = documentController.searchDocuments("");
 
         // Assert
         assertEquals(BAD_REQUEST, response.getStatusCode());
@@ -270,12 +264,10 @@ class DocumentControllerTest {
         when(documentService.searchDocuments(query)).thenThrow(new RuntimeException("Unexpected error"));
 
         // Act
-        ResponseEntity<List<DocumentWithFileDTO>> response = documentController.searchDocuments(query);
+        ResponseEntity<List<DocumentDTO>> response = documentController.searchDocuments(query);
 
         // Assert
         assertEquals(INTERNAL_SERVER_ERROR, response.getStatusCode());
         verify(documentService).searchDocuments(query);
     }
-
- */
 }
