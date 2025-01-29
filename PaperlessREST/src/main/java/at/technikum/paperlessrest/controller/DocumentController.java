@@ -1,8 +1,9 @@
 package at.technikum.paperlessrest.controller;
 
+import at.technikum.paperlessrest.dto.DocumentDTO;
+import at.technikum.paperlessrest.dto.DocumentWithFileDTO;
 import at.technikum.paperlessrest.elastic.ElasticsearchSearcher;
 import at.technikum.paperlessrest.entities.Document;
-import at.technikum.paperlessrest.entities.DocumentWithFile;
 import at.technikum.paperlessrest.service.DocumentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -24,11 +25,9 @@ import java.util.List;
 public class DocumentController {
 
     private final DocumentService documentService;
-    private final ElasticsearchSearcher elasticsearchSearcher;
 
     public DocumentController(DocumentService documentService, ElasticsearchSearcher elasticsearchSearcher) {
         this.documentService = documentService;
-        this.elasticsearchSearcher = elasticsearchSearcher;
     }
 
     @Operation(summary = "Uploads a document")
@@ -38,9 +37,9 @@ public class DocumentController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Document> uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<DocumentDTO> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            Document document = documentService.uploadFile(file);
+            DocumentDTO document = documentService.uploadFile(file);
             return ResponseEntity.status(201).body(document);
         } catch (IllegalArgumentException e) {
             log.error("Invalid file format: {}", e.getMessage());
@@ -81,7 +80,7 @@ public class DocumentController {
     public ResponseEntity<byte[]> getDocumentById(@PathVariable String id) {
         try {
             byte[] pdfFile = documentService.getDocumentFileById(id);
-            Document document = documentService.getDocumentById(id);
+            DocumentDTO document = documentService.getDocumentById(id);
             if (document == null || pdfFile == null) {
                 return ResponseEntity.notFound().build();
             }
@@ -104,13 +103,14 @@ public class DocumentController {
 
     @Operation(summary = "Fetches all documents")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Documents retrieved successfully", content = @Content(schema = @Schema(implementation = DocumentWithFile.class))),
+            @ApiResponse(responseCode = "200", description = "Documents retrieved successfully", content = @Content(schema = @Schema(implementation = DocumentDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping
-    public ResponseEntity<List<DocumentWithFile>> getAllDocuments() {
+    public ResponseEntity<List<DocumentDTO>> getAllDocuments() {
         try {
-            List<DocumentWithFile> documents = documentService.getAllDocuments();
+            List<DocumentDTO> documents = documentService.getAllDocuments();
+            log.error("Found {} documents", documents.size());
             return ResponseEntity.ok(documents);
         } catch (Exception e) {
             log.error("Error retrieving documents: {}", e.getMessage(), e);
@@ -121,12 +121,12 @@ public class DocumentController {
     @Operation(summary = "Searches documents by query and fetches additional data")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Documents retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = DocumentWithFile.class))),
+                    content = @Content(schema = @Schema(implementation = DocumentWithFileDTO.class))),
             @ApiResponse(responseCode = "400", description = "Invalid query parameter"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/search")
-    public ResponseEntity<List<DocumentWithFile>> searchDocuments(@RequestParam String query) {
+    public ResponseEntity<List<DocumentDTO>> searchDocuments(@RequestParam String query) {
         try {
             if (query == null || query.trim().isEmpty()) {
                 log.error("Invalid query parameter: query cannot be null or empty");
@@ -134,7 +134,7 @@ public class DocumentController {
             }
 
             log.info("Searching documents with query: {}", query);
-            List<DocumentWithFile> results = documentService.searchDocuments(query);
+            List<DocumentDTO> results = documentService.searchDocuments(query);
             return ResponseEntity.ok(results);
 
         } catch (Exception e) {
@@ -142,5 +142,4 @@ public class DocumentController {
             return ResponseEntity.status(500).build();
         }
     }
-
 }

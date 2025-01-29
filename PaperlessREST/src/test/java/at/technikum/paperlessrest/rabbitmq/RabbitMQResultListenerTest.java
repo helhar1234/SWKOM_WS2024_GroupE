@@ -1,5 +1,6 @@
 package at.technikum.paperlessrest.rabbitmq;
 
+import at.technikum.paperlessrest.dto.DocumentDTO;
 import at.technikum.paperlessrest.entities.Document;
 import at.technikum.paperlessrest.repository.DocumentRepository;
 import org.json.JSONException;
@@ -19,7 +20,7 @@ class RabbitMQResultListenerTest {
     void handleOcrResult_success() throws JSONException {
         // Arrange
         String documentId = "123e4567-e89b-12d3-a456-426614174000";
-        Document document = Document.builder()
+        DocumentDTO document = DocumentDTO.builder()
                 .id(documentId)
                 .filename("test.pdf")
                 .ocrJobDone(false)
@@ -29,8 +30,8 @@ class RabbitMQResultListenerTest {
                 .put("documentId", documentId)
                 .toString();
 
-        when(documentRepository.findById(documentId)).thenReturn(java.util.Optional.of(document));
-        when(documentRepository.save(any(Document.class))).thenReturn(document);
+        when(documentRepository.findById(documentId)).thenReturn(java.util.Optional.of(new Document(document)));
+        when(documentRepository.save(any(Document.class))).thenReturn(new Document(document));
 
         // Act
         rabbitMQResultListener.handleOcrResult(message);

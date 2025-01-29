@@ -1,6 +1,6 @@
 package at.technikum.paperlessrest.elastic;
 
-import at.technikum.paperlessrest.entities.DocumentSearchResult;
+import at.technikum.paperlessrest.dto.DocumentSearchResultDTO;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -20,7 +20,7 @@ public class ElasticsearchSearcher {
     @Autowired
     ElasticsearchClient elasticsearchClient;
 
-    public List<DocumentSearchResult> searchDocuments(String query) {
+    public List<DocumentSearchResultDTO> searchDocuments(String query) {
         try {
             // Elasticsearch-Suchanfrage erstellen, die nach ocrText, filename und documentId sucht
             SearchRequest searchRequest = SearchRequest.of(s -> s
@@ -35,7 +35,7 @@ public class ElasticsearchSearcher {
             );
 
             // Elasticsearch-Suche ausführen
-            SearchResponse<DocumentSearchResult> searchResponse = elasticsearchClient.search(searchRequest, DocumentSearchResult.class);
+            SearchResponse<DocumentSearchResultDTO> searchResponse = elasticsearchClient.search(searchRequest, DocumentSearchResultDTO.class);
 
             log.info("Elasticsearch returned {} results for query: {}", searchResponse.hits().hits().size(), query);
 

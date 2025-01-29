@@ -1,9 +1,10 @@
 package at.technikum.paperlessrest.service;
 
+import at.technikum.paperlessrest.dto.DocumentDTO;
+import at.technikum.paperlessrest.dto.DocumentSearchResultDTO;
+import at.technikum.paperlessrest.dto.DocumentWithFileDTO;
 import at.technikum.paperlessrest.elastic.ElasticsearchSearcher;
 import at.technikum.paperlessrest.entities.Document;
-import at.technikum.paperlessrest.entities.DocumentSearchResult;
-import at.technikum.paperlessrest.entities.DocumentWithFile;
 import at.technikum.paperlessrest.rabbitmq.RabbitMQSender;
 import at.technikum.paperlessrest.repository.DocumentRepository;
 import io.minio.*;
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -24,7 +24,7 @@ public class DocumentService {
 
     private final MinioClient minioClient;
     private final DocumentRepository documentRepository;
-    private final RabbitMQSender rabbitMQSender; // Ersetzen RabbitTemplate durch RabbitMQProducer
+    private final RabbitMQSender rabbitMQSender; // Producer für OCR-Jobs
     private final ElasticsearchSearcher elasticsearchSearcher;
     private final String bucketName = "documents";
 
@@ -35,15 +35,14 @@ public class DocumentService {
         this.elasticsearchSearcher = elasticsearchSearcher;
     }
 
-    public Document uploadFile(MultipartFile file) throws Exception {
-        //log.info("Received file for upload: {}",file.getOriginalFilename());
+    public DocumentDTO uploadFile(MultipartFile file) throws Exception {
         if (!Objects.equals(file.getContentType(), "application/pdf")) {
             log.warn("Invalid file type for upload: {}", file.getContentType());
             throw new IllegalArgumentException("Only PDF files are allowed.");
         }
 
         String id = UUID.randomUUID().toString();
-        Document document = Document.builder()
+        DocumentDTO document = DocumentDTO.builder()
                 .id(id)
                 .filename(file.getOriginalFilename())
                 .filesize(file.getSize())
@@ -52,15 +51,17 @@ public class DocumentService {
                 .ocrJobDone(false)
                 .build();
 
-        //log.info("Saving document metadata to database: {}", document);
-        documentRepository.save(document);
+        log.info("Saving document metadata to repository: {}", document);
+        // Speichern der Entität im Repository
+        documentRepository.save(new Document(document));
 
+        // Prüfen und Erstellen des Buckets in MinIO
         if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())) {
-            log.warn("Bucket '{}' does not exist. Creating it now.", bucketName);
+            log.info("Bucket '{}' does not exist. Creating it now.", bucketName);
             minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
         }
 
-        System.out.println("Uploading file to MinIO: {}" + document.getFilename());
+        log.info("Uploading file to MinIO: {}", document.getFilename());
         minioClient.putObject(
                 PutObjectArgs.builder()
                         .bucket(bucketName)
@@ -83,7 +84,7 @@ public class DocumentService {
             throw new IllegalArgumentException("Document not found");
         }
 
-        log.info("Deleting document metadata from database with ID: {}", id);
+        log.info("Deleting document metadata from repository with ID: {}", id);
         documentRepository.deleteById(id);
 
         log.info("Removing file from MinIO with ID: {}", id);
@@ -107,48 +108,67 @@ public class DocumentService {
         }
     }
 
-    public List<DocumentWithFile> getAllDocuments() {
-        log.info("Fetching all documents with associated files.");
-        return documentRepository.findAll().stream().map(document -> {
-            try {
-                byte[] file = minioClient.getObject(GetObjectArgs.builder().bucket(bucketName).object(document.getId()).build()).readAllBytes();
-                log.info("File successfully fetched for document ID: {}", document.getId());
-                return new DocumentWithFile(document, file);
-            } catch (Exception e) {
-                log.error("Error fetching file for document ID {}: {}", document.getId(), e.getMessage(), e);
-                return new DocumentWithFile(document, null);
-            }
-        }).collect(Collectors.toList());
-    }
-    public Document getDocumentById(String id) {
-        //log.info("Fetching document metadata by ID: {}", id);
-        return documentRepository.findById(id).orElse(null);
+    public DocumentDTO getDocumentById(String id) {
+        log.info("Fetching document metadata by ID: {}", id);
+        return documentRepository.findById(id)
+                .map(document -> new DocumentDTO(document.getId(), document.getFilename(), document.getFilesize(), document.getFiletype(), document.getUploadDate(), document.isOcrJobDone()))
+                .orElseThrow(() -> new IllegalArgumentException("Document not found with ID: " + id));
     }
 
-    public List<DocumentWithFile> searchDocuments(String query) {
-        // Elasticsearch-Suche nach documentId und filename
-        log.info("Querying Elasticsearch with query: {}", query);
-        List<DocumentSearchResult> elasticResults = elasticsearchSearcher.searchDocuments(query);
-
-        // Ergebnisse zu Document-Objekten mappen
-        List<Document> allDocuments = elasticResults.stream()
-                .map(result -> new Document(result.getDocumentId(), result.getFilename()))
+    public List<DocumentDTO> getAllDocuments() {
+        log.info("Fetching all documents.");
+        return documentRepository.findAll()
+                .stream()
+                .filter(Objects::nonNull) // Entferne `null`-Einträge
+                .map(document -> new DocumentDTO(
+                        document.getId(),
+                        document.getFilename(),
+                        document.getFilesize(),
+                        document.getFiletype(),
+                        document.getUploadDate(),
+                        document.isOcrJobDone()))
                 .collect(Collectors.toList());
+    }
 
-        // Dateien abrufen und in DocumentWithFile-Objekte umwandeln
-        log.info("Fetching file data for {} documents", allDocuments.size());
-        return allDocuments.stream().map(document -> {
-            try {
-                byte[] file = minioClient.getObject(GetObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(document.getId())
-                        .build()).readAllBytes();
-                return new DocumentWithFile(document, file);
-            } catch (Exception e) {
-                log.error("Error fetching file for document ID {}: {}", document.getId(), e.getMessage());
-                return new DocumentWithFile(document, null);
-            }
-        }).collect(Collectors.toList());
+    public List<DocumentDTO> searchDocuments(String query) {
+        log.info("Querying Elasticsearch with query: {}", query);
+
+        // Elasticsearch-Suche durchführen
+        List<DocumentSearchResultDTO> elasticResults = elasticsearchSearcher.searchDocuments(query);
+
+        log.info("Mapping Elasticsearch results to DTOs using database data.");
+
+        // Dokumentinformationen aus der Datenbank abrufen und zu DTOs mappen
+        return elasticResults.stream()
+                .map(result -> {
+                    try {
+                        // Hole das Dokument aus der Datenbank
+                        Document document = documentRepository.findById(result.getDocumentId())
+                                .orElseThrow(() -> new RuntimeException("Document not found in database for ID: " + result.getDocumentId()));
+
+                        // Mappe die Datenbankdaten zu einem DocumentDTO
+                        return new DocumentDTO(
+                                document.getId(),
+                                document.getFilename(),
+                                document.getFilesize(),
+                                document.getFiletype(),
+                                document.getUploadDate(),
+                                document.isOcrJobDone()
+                        );
+                    } catch (Exception e) {
+                        log.error("Error fetching document data for ID {}: {}", result.getDocumentId(), e.getMessage(), e);
+                        // Falls ein Fehler auftritt, ein leeres DTO zurückgeben oder andere Behandlung
+                        return new DocumentDTO(
+                                result.getDocumentId(),
+                                result.getFilename(),
+                                result.getFilesize(),
+                                result.getFiletype(),
+                                result.getUploadDate(),
+                                result.isOcrJobDone()
+                        );
+                    }
+                })
+                .collect(Collectors.toList());
     }
 
 }

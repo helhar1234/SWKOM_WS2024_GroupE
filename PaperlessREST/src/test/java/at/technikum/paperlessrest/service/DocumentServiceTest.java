@@ -1,9 +1,9 @@
 package at.technikum.paperlessrest.service;
 
+import at.technikum.paperlessrest.dto.DocumentDTO;
+import at.technikum.paperlessrest.dto.DocumentSearchResultDTO;
 import at.technikum.paperlessrest.elastic.ElasticsearchSearcher;
 import at.technikum.paperlessrest.entities.Document;
-import at.technikum.paperlessrest.entities.DocumentSearchResult;
-import at.technikum.paperlessrest.entities.DocumentWithFile;
 import at.technikum.paperlessrest.rabbitmq.RabbitMQSender;
 import at.technikum.paperlessrest.repository.DocumentRepository;
 import io.minio.*;
@@ -39,7 +39,7 @@ class DocumentServiceTest {
                 "Sample PDF content".getBytes()
         );
 
-        Document document = Document.builder()
+        DocumentDTO document = DocumentDTO.builder()
                 .id(UUID.randomUUID().toString())
                 .filename(file.getOriginalFilename())
                 .filesize(file.getSize())
@@ -48,13 +48,12 @@ class DocumentServiceTest {
                 .ocrJobDone(false)
                 .build();
 
-        when(documentRepository.save(any(Document.class))).thenReturn(document);
+        when(documentRepository.save(any(Document.class))).thenReturn(new Document(document));
         doNothing().when(rabbitMQSender).sendOCRJobMessage(anyString(), anyString());
-        // Statt `doNothing` hier `doAnswer` verwenden
         doAnswer(invocation -> null).when(minioClient).putObject(any(PutObjectArgs.class));
 
         // Act
-        Document result = documentService.uploadFile(file);
+        DocumentDTO result = documentService.uploadFile(file);
 
         // Assert
         assertNotNull(result);
@@ -199,35 +198,21 @@ class DocumentServiceTest {
     }
 
     @Test
-    void getAllDocuments_success() throws Exception {
+    void getAllDocuments_success() {
         // Arrange
-        Document document1 = Document.builder().id("1").filename("doc1.pdf").build();
-        Document document2 = Document.builder().id("2").filename("doc2.pdf").build();
+        DocumentDTO document1 = DocumentDTO.builder().id("1").filename("doc1.pdf").build();
+        DocumentDTO document2 = DocumentDTO.builder().id("2").filename("doc2.pdf").build();
 
-        byte[] fileContent1 = "Content 1".getBytes();
-        byte[] fileContent2 = "Content 2".getBytes();
-
-        GetObjectResponse response1 = mock(GetObjectResponse.class);
-        GetObjectResponse response2 = mock(GetObjectResponse.class);
-
-        when(response1.readAllBytes()).thenReturn(fileContent1);
-        when(response2.readAllBytes()).thenReturn(fileContent2);
-
-        when(documentRepository.findAll()).thenReturn(List.of(document1, document2));
-
-        when(minioClient.getObject(any(GetObjectArgs.class)))
-                .thenReturn(response1)
-                .thenReturn(response2);
+        when(documentRepository.findAll()).thenReturn(List.of(new Document(document1), new Document(document2)));
 
         // Act
-        List<DocumentWithFile> result = documentService.getAllDocuments();
+        List<DocumentDTO> result = documentService.getAllDocuments();
 
         // Assert
         assertEquals(2, result.size());
-        assertArrayEquals(fileContent1, result.get(0).getFile());
-        assertArrayEquals(fileContent2, result.get(1).getFile());
         verify(documentRepository).findAll();
-        verify(minioClient, times(2)).getObject(any(GetObjectArgs.class));
+        assertEquals(document1.getId(), result.get(0).getId());
+        assertEquals(document2.getId(), result.get(1).getId());
     }
 
     @Test
@@ -236,7 +221,7 @@ class DocumentServiceTest {
         when(documentRepository.findAll()).thenReturn(Collections.emptyList());
 
         // Act
-        List<DocumentWithFile> result = documentService.getAllDocuments();
+        List<DocumentDTO> result = documentService.getAllDocuments();
 
         // Assert
         assertNotNull(result);
@@ -250,15 +235,15 @@ class DocumentServiceTest {
         // Arrange
         String query = "test";
 
-        DocumentSearchResult elasticResult = new DocumentSearchResult("1", "extracted text", "test1.pdf", "timestamp");
+        DocumentSearchResultDTO elasticResult = new DocumentSearchResultDTO("1", "text", "filename", "filetype", 1, true, null, "timestamp");
         when(elasticsearchSearcher.searchDocuments(query)).thenReturn(List.of(elasticResult));
 
         // Act
-        List<DocumentWithFile> results = documentService.searchDocuments(query);
+        List<DocumentDTO> results = documentService.searchDocuments(query);
 
         // Assert
         assertEquals(1, results.size());
-        assertEquals(elasticResult.getDocumentId(), results.get(0).getDocument().getId());
+        assertEquals(elasticResult.getDocumentId(), results.get(0).getId());
         verify(elasticsearchSearcher).searchDocuments(query);
     }
 
@@ -270,7 +255,7 @@ class DocumentServiceTest {
         when(elasticsearchSearcher.searchDocuments(query)).thenReturn(Collections.emptyList());
 
         // Act
-        List<DocumentWithFile> results = documentService.searchDocuments(query);
+        List<DocumentDTO> results = documentService.searchDocuments(query);
 
         // Assert
         assertNotNull(results);
@@ -290,24 +275,4 @@ class DocumentServiceTest {
         assertEquals("Elasticsearch error", exception.getMessage());
         verify(elasticsearchSearcher).searchDocuments(query);
     }
-
-    @Test
-    void searchDocuments_minioFileRetrievalFailure() throws Exception {
-        // Arrange
-        String query = "minioFail";
-        DocumentSearchResult elasticResult = new DocumentSearchResult("1", "ocr extracted text", "doc1.pdf", "timestamp");
-
-        when(elasticsearchSearcher.searchDocuments(query)).thenReturn(List.of(elasticResult));
-        when(minioClient.getObject(any(GetObjectArgs.class))).thenThrow(new RuntimeException("MinIO error"));
-
-        // Act
-        List<DocumentWithFile> results = documentService.searchDocuments(query);
-
-        // Assert
-        assertEquals(1, results.size());
-        assertNull(results.get(0).getFile());
-        verify(elasticsearchSearcher).searchDocuments(query);
-        verify(minioClient).getObject(any(GetObjectArgs.class));
-    }
-
 }

@@ -1,5 +1,6 @@
 package at.technikum.paperlessrest.integration;
 
+import at.technikum.paperlessrest.dto.DocumentDTO;
 import at.technikum.paperlessrest.entities.Document;
 import at.technikum.paperlessrest.repository.DocumentRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,12 +26,13 @@ class DocumentRepositoryIntegrationTest {
     @Test
     void testSaveAndFindById() {
         // Arrange
-        Document document = Document.builder()
+        DocumentDTO document = DocumentDTO.builder()
                 .id("1")
                 .filename("test.pdf")
                 .filesize(123L)
                 .build();
-        documentRepository.save(document);
+
+        documentRepository.save(new Document(document));
 
         // Act
         Optional<Document> result = documentRepository.findById("1");
