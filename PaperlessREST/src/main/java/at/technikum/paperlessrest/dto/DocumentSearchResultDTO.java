@@ -19,6 +19,6 @@ public class DocumentSearchResultDTO {
     private boolean ocrJobDone;
     private LocalDateTime uploadDate;
 
-    @JsonProperty("@timestamp") // Mappt das Elasticsearch-Feld "@timestamp" auf "timestamp"
+    @JsonProperty("@timestamp") // mapping the Elasticsearch-Field "@timestamp" to "timestamp"
     private String timestamp;
 }

@@ -85,7 +85,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Function to render documents table
   const renderTable = (documents) => {
-    //console.log(documents);
     tableBody.innerHTML = "";
     documents.forEach((document) => {
       tableBody.innerHTML += createTableRow(document);

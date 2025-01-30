@@ -3,7 +3,7 @@
     <timestamp key="currentDate" datePattern="dd-MM-yyyy" />
 
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <!-- Datei-Name mit Datum -->
+        <!-- Filename with date -->
         <file>${LOG_PATH}/${currentDate}-paperless-OCRWorker.log</file>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>

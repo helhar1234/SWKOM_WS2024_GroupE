@@ -22,7 +22,7 @@ public class ElasticsearchSearcher {
 
     public List<DocumentSearchResultDTO> searchDocuments(String query) {
         try {
-            // Elasticsearch-Suchanfrage erstellen, die nach ocrText, filename und documentId sucht
+            // Create Elasticsearch search request that searches for ocrText, filename, and documentId
             SearchRequest searchRequest = SearchRequest.of(s -> s
                     .index("documents")
                     .query(q -> q
@@ -34,12 +34,12 @@ public class ElasticsearchSearcher {
                     )
             );
 
-            // Elasticsearch-Suche ausführen
+            // Execute Elasticsearch search
             SearchResponse<DocumentSearchResultDTO> searchResponse = elasticsearchClient.search(searchRequest, DocumentSearchResultDTO.class);
 
             log.info("Elasticsearch returned {} results for query: {}", searchResponse.hits().hits().size(), query);
 
-            // Ergebnisse mappen und null-Quellen filtern
+            // Map results and filter null sources
             return searchResponse.hits().hits().stream()
                     .map(Hit::source)
                     .filter(Objects::nonNull)

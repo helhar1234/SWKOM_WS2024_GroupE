@@ -23,7 +23,7 @@ public class DocumentService {
 
     private final MinioClient minioClient;
     private final DocumentRepository documentRepository;
-    private final RabbitMQSender rabbitMQSender; // Producer für OCR-Jobs
+    private final RabbitMQSender rabbitMQSender; // Producer for OCR-Jobs
     private final ElasticsearchSearcher elasticsearchSearcher;
     private final String bucketName = "documents";
 
@@ -51,10 +51,10 @@ public class DocumentService {
                 .build();
 
         log.info("Saving document metadata to repository: {}", document);
-        // Speichern der Entität im Repository
+        // Saving the entity in the repository
         documentRepository.save(new Document(document));
 
-        // Prüfen und Erstellen des Buckets in MinIO
+        // Cheching and building of the Bucket in MinIO
         if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())) {
             log.info("Bucket '{}' does not exist. Creating it now.", bucketName);
             minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
@@ -118,7 +118,7 @@ public class DocumentService {
         log.info("Fetching all documents.");
         return documentRepository.findAll()
                 .stream()
-                .filter(Objects::nonNull) // Entferne `null`-Einträge
+                .filter(Objects::nonNull) // Remove `null`entries
                 .map(document -> new DocumentDTO(
                         document.getId(),
                         document.getFilename(),
@@ -132,20 +132,20 @@ public class DocumentService {
     public List<DocumentDTO> searchDocuments(String query) {
         log.info("Querying Elasticsearch with query: {}", query);
 
-        // Elasticsearch-Suche durchführen
+        // Elasticsearch - actual search
         List<DocumentSearchResultDTO> elasticResults = elasticsearchSearcher.searchDocuments(query);
 
         log.info("Mapping Elasticsearch results to DTOs using database data.");
 
-        // Dokumentinformationen aus der Datenbank abrufen und zu DTOs mappen
+        // Retrieve document information from the database and map to DTOs
         return elasticResults.stream()
                 .map(result -> {
                     try {
-                        // Hole das Dokument aus der Datenbank
+                        // Fetch the document from the database
                         Document document = documentRepository.findById(result.getDocumentId())
                                 .orElseThrow(() -> new RuntimeException("Document not found in database for ID: " + result.getDocumentId()));
 
-                        // Mappe die Datenbankdaten zu einem DocumentDTO
+                        // Map the database data to a DocumentDTO
                         return new DocumentDTO(
                                 document.getId(),
                                 document.getFilename(),
@@ -156,7 +156,7 @@ public class DocumentService {
                         );
                     } catch (Exception e) {
                         log.error("Error fetching document data for ID {}: {}", result.getDocumentId(), e.getMessage(), e);
-                        // Falls ein Fehler auftritt, ein leeres DTO zurückgeben oder andere Behandlung
+                        // If an error occurs, return an empty DTO or other handling
                         return new DocumentDTO(
                                 result.getDocumentId(),
                                 result.getFilename(),
